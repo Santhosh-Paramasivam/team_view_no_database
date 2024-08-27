@@ -1,0 +1,126 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+class PointsDisplayPage extends StatefulWidget {
+  @override
+  _PointsDisplayPageState createState() => _PointsDisplayPageState();
+}
+
+class _PointsDisplayPageState extends State<PointsDisplayPage> {
+  int xposition = 0;
+  int yposition = 0;
+  double scale = 1.0;
+
+  Map<String, dynamic>? jsonData;
+
+  @override
+  void initState() {
+    super.initState();
+    loadJson();
+  }
+
+  Future<void> loadJson() async {
+    String jsonString = await rootBundle.loadString('assets/Building1.json');
+    setState(() {
+      jsonData = json.decode(jsonString);
+
+      print(jsonData?['GroundFloor']);
+      floor = jsonData?['GroundFloor'];
+      points_ = floor?['Room1'];
+      print(points_);
+
+      // Convert dynamic points_ to List<Offset>
+      points = points_.map((item) {
+        double x = item['x'].toDouble();
+        double y = item['y'].toDouble();
+        return Offset(x, y);
+      }).toList();
+    });
+  }
+
+  List<Offset> points = <Offset>[];
+  List<dynamic> points_ = <dynamic>[];
+
+  Map<String, dynamic>? floor = Map();
+
+  void moveLeft() {
+    setState(() {
+      xposition += 8;
+    });
+  }
+
+  void moveUp() {
+    setState(() {
+      yposition -= 8;
+    });
+  }
+
+  void moveDown() {
+    setState(() {
+      yposition += 8;
+    });
+  }
+
+  void moveRight() {
+    setState(() {
+      xposition -= 8;
+    });
+  }
+
+  void zoomIn() {
+    setState(() {
+      scale += 0.1;
+    });
+  }
+
+  void zoomOut() {
+    setState(() {
+      scale -= 0.1;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Santhosh Points")),
+      body: Container(
+        width: 500,
+        height: 500,
+        color: const Color.fromARGB(255, 255, 214, 255),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                TextButton(onPressed: this.moveLeft, child: Text("<")),
+                TextButton(onPressed: this.moveRight, child: Text(">")),
+                TextButton(onPressed: this.moveUp, child: Text("^")),
+                TextButton(onPressed: this.moveDown, child: Text("v")),
+                TextButton(onPressed: this.zoomIn, child: Text("+")),
+                TextButton(onPressed: this.zoomOut, child: Text("-")),
+              ],
+            ),
+            Container(
+              width: 500,
+              height: 300,
+              child: CustomPaint(
+                painter: PointsPainter(this.xposition, this.yposition, this.scale, this.points),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PointsPainter extends CustomPainter {
+  final List<Offset> points;
+  final List<List<Offset>> lines = [];
+
+  final int xposition;
+  final int yposition;
+  final double scale;
+
+  PointsPainter(this.xposition, this.yposition, this.scale, this.points) {
+    for (int i = 
