@@ -13,6 +13,12 @@ class SearchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar:AppBar
+      (
+        title: const Text("Search Page"),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white
+      ),
       body: SizedBox(
         width: double.infinity,
         height: 60,
@@ -24,7 +30,7 @@ class SearchPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               TextButton(onPressed: () => back, child: const Text("Back")),
-              Expanded(
+              const Expanded(
                 child: TextField(
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.person),

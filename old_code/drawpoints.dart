@@ -1,19 +1,23 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 
 class PointsDisplayPage extends StatelessWidget {
   final List<Offset> points = 
   [
-    Offset(50, 100),
-    Offset(100, 150),
-    Offset(150, 200),
-    Offset(200, 250),
+    const Offset(50, 100),
+    const Offset(100, 150),
+    const Offset(150, 200),
+    const Offset(200, 250),
   ];
+
+  PointsDisplayPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Display Points'),
+        title: const Text('Display Points'),
       ),
       body: Center(
         child: Container(

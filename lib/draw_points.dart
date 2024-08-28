@@ -1,3 +1,4 @@
+// ignore: unnecessary_import
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -121,6 +122,10 @@ class PointsPainter extends CustomPainter {
   final List<Room> roomsOnFloor;
   double sumdX = 0;
   double sumdY = 0;
+  double avgdY = 0;
+  double avgdX = 0;
+  double translatedTextX = 0;
+  double translatedTextY = 0;
 
   PointsPainter(
       this.xposition, this.yposition, this.scale, this.roomsOnFloor);
@@ -128,6 +133,11 @@ class PointsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final textStyle = TextStyle(
+      color: const Color.fromARGB(255, 0, 154, 82),
+      fontSize: scale*20,
+    );
 
     final pointPaint = Paint()
       ..strokeWidth = 10.0
@@ -152,6 +162,22 @@ class PointsPainter extends CustomPainter {
         canvas.drawCircle(start, 4, pointPaint);
       }
 
+      TextSpan textSpan = TextSpan(
+      text: room.roomName,
+      style: textStyle,
+      );
+
+      TextPainter textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+      );
+
+      textPainter.layout(
+      minWidth: 0,
+      maxWidth: size.width,
+      );
+
+
       sumdX = 0;
       sumdY = 0;
       for(Offset point in pointsTransformed)
@@ -159,6 +185,13 @@ class PointsPainter extends CustomPainter {
         sumdX += point.dx;
         sumdY += point.dy;
       }
+      avgdY = sumdY/pointsTransformed.length;
+      avgdX = sumdX/pointsTransformed.length;
+
+      //translatedTextX = avgdX*0.95;
+      //translatedTextY = avgdY*0.95;
+      //textPainter.paint(canvas, Offset(avgdX,avgdY));
+      textPainter.paint(canvas, Offset(avgdX - textPainter.width / 2, avgdY - textPainter.height / 2));
     }
   }
 
@@ -167,6 +200,8 @@ class PointsPainter extends CustomPainter {
     return oldDelegate.xposition != xposition ||
         oldDelegate.yposition != yposition ||
         oldDelegate.scale != scale ||
-        oldDelegate.roomsOnFloor != roomsOnFloor;
+        oldDelegate.roomsOnFloor != roomsOnFloor ||
+        oldDelegate.avgdX != avgdX ||
+        oldDelegate.avgdY != avgdY ;
   }
 }

@@ -1,0 +1,41 @@
+{
+    "institution_members":
+    [
+        {
+            "id": 1,
+            "name": "Santhosh Paramasivam",
+            "username": "Santhosh123",
+            "password":"Santhosh123",
+            "manual_location":"Room1",
+            "user_role":"Student",
+            "institution_id":"1",
+            "status":"Available",
+            "department":"CSE",
+            "class":"C"
+        },
+        {
+            "id": 2,
+            "name": "Bharath Kumar. N",
+            "username": "BharathAmmu",
+            "password":"BharathAmmu",
+            "manual_location":"Room1",
+            "user_role":"Student",
+            "institution_id":"1",
+            "status":"Available",
+            "department":"CSE",
+            "class":"C"
+        },
+        {
+            "id": 3,
+            "name": "Sharanya",
+            "title":"Dr.",
+            "username": "Sharanya",
+            "password":"Sharanya",
+            "manual_location":"Room2",
+            "user_role":"Professor",
+            "institution_id":"1",
+            "status":"Available",
+            "department":"CSE"
+        }
+    ]
+}
