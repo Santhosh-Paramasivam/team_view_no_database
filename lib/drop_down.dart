@@ -11,30 +11,30 @@ class _IconDropdownPageState extends State<IconDropdownPage> {
   String? selectedValue;
 
   final List<DropdownMenuItem<String>> _dropdownItems = [
-    DropdownMenuItem(
+    const DropdownMenuItem(
       value: 'Person',
       child: Row(
-        children: const [
+        children: [
           Icon(Icons.person),
           SizedBox(width: 10),
           Text("Person"),
         ],
       ),
     ),
-    DropdownMenuItem(
+    const DropdownMenuItem(
       value: 'Home',
       child: Row(
-        children: const [
+        children: [
           Icon(Icons.home),
           SizedBox(width: 10),
           Text("Home"),
         ],
       ),
     ),
-    DropdownMenuItem(
+    const DropdownMenuItem(
       value: 'Settings',
       child: Row(
-        children: const [
+        children: [
           Icon(Icons.settings),
           SizedBox(width: 10),
           Text("Settings"),

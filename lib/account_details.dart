@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'search_page.dart';
-import 'dropdown.dart';
+import 'drop_down.dart';
 
 class AccountDetails extends StatelessWidget
 {

@@ -1,4 +1,3 @@
-// ignore: unnecessary_import
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -12,17 +11,26 @@ class Room {
   Room(this.roomVertices, this.roomName);
 }
 
-class PointsDisplayPage extends StatefulWidget {
-  const PointsDisplayPage({super.key});
+class MapDisplayWidget extends StatefulWidget {
+
+  MapDisplayWidget({Key? key}) : super(key: key);
 
   @override
-  State<PointsDisplayPage> createState() => _PointsDisplayPageState();
+  State<MapDisplayWidget> createState() => _MapDisplayWidgetState();
 }
 
-class _PointsDisplayPageState extends State<PointsDisplayPage> {
+class _MapDisplayWidgetState extends State<MapDisplayWidget> {
   int xposition = 0;
   int yposition = 0;
   double scale = 1.0;
+
+  int institutionId = 1;
+  int buildingId = 1;
+  String floorName = "SecondFloor";
+  String _name = "";
+
+  String personRoom = "Space";
+  String personName = "";
 
   Map<String, dynamic>? jsonData;
   List<Room> roomsOnFloor = <Room>[];
@@ -30,23 +38,39 @@ class _PointsDisplayPageState extends State<PointsDisplayPage> {
   @override
   void initState() {
     super.initState();
-    loadJson();
+    buildingOffsetsLoad();
   }
 
-  Future<void> loadJson() async {
-    String jsonString = await rootBundle.loadString('assets/Building1.json');
+  Future<void> buildingOffsetsLoad() async {
+    // Load the JSON file
+    String jsonString = await rootBundle.loadString('assets/buildings.json');
+    
+    // Parse the JSON
     setState(() {
       jsonData = json.decode(jsonString);
-      var floor = jsonData?['GroundFloor'];
-      floor?.forEach((key, value) {
-        List<Offset> points = value.map<Offset>((item) {
-          double x = item[0].toDouble();
-          double y = item[1].toDouble();
-          return Offset(x, y);
-        }).toList();
 
-        roomsOnFloor.add(Room(points, key));
-      });
+      // Find the specific building by institution_id and building_id
+      var building = jsonData?['buildings']?.firstWhere((building) =>
+          building['insitution_id'] == institutionId &&
+          building['building_id'] == buildingId,
+          orElse: () => null);
+
+      // If the building exists, access the specified floor data
+      if (building != null) {
+        var floorData = building[floorName];
+        
+        // Iterate over each room on the floor and create Room objects
+        floorData?.forEach((key, value) {
+          List<Offset> points = (value as List).map<Offset>((item) {
+            double x = item[0].toDouble();
+            double y = item[1].toDouble();
+            return Offset(x, y);
+          }).toList();
+
+          // Add the room to the list
+          roomsOnFloor.add(Room(points, key));
+        });
+      }
     });
   }
 
@@ -88,19 +112,15 @@ class _PointsDisplayPageState extends State<PointsDisplayPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(title: Text("Santhosh Points")),
-        body: Container(
-          width: 500,
-          height: 500,
+    return Container(
           child: Column(children: [
             Row(children: [
-              TextButton(onPressed: this.moveLeft, child: Text("<")),
-              TextButton(onPressed: this.moveRight, child: Text(">")),
-              TextButton(onPressed: this.moveUp, child: Text("^")),
-              TextButton(onPressed: this.moveDown, child: Text("v")),
-              TextButton(onPressed: this.zoomIn, child: Text("+")),
-              TextButton(onPressed: this.zoomOut, child: Text("-")),
+              TextButton(onPressed: this.moveLeft, child: const Text("<")),
+              TextButton(onPressed: this.moveRight, child: const Text(">")),
+              TextButton(onPressed: this.moveUp, child: const Text("^")),
+              TextButton(onPressed: this.moveDown, child: const Text("v")),
+              TextButton(onPressed: this.zoomIn, child: const Text("+")),
+              TextButton(onPressed: this.zoomOut, child: const Text("-")),
             ]),
             Container(
                 width: 500,
@@ -111,7 +131,7 @@ class _PointsDisplayPageState extends State<PointsDisplayPage> {
                       xposition, yposition, scale, roomsOnFloor),
                 ))
           ]),
-        ));
+        );
   }
 }
 
@@ -120,6 +140,7 @@ class PointsPainter extends CustomPainter {
   final int yposition;
   final double scale;
   final List<Room> roomsOnFloor;
+  String finalTextDisplayed = "";
   double sumdX = 0;
   double sumdY = 0;
   double avgdY = 0;
@@ -136,7 +157,7 @@ class PointsPainter extends CustomPainter {
 
     final textStyle = TextStyle(
       color: const Color.fromARGB(255, 0, 154, 82),
-      fontSize: scale*20,
+      fontSize: scale*14,
     );
 
     final pointPaint = Paint()
@@ -150,6 +171,8 @@ class PointsPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     for (Room room in roomsOnFloor) {
+      String currentRoomName = room.roomName;
+    
       List<Offset> pointsTransformed = room.roomVertices.map((point) {
         return Offset(
             scale * (point.dx - xposition), scale * (point.dy - yposition));
@@ -158,12 +181,14 @@ class PointsPainter extends CustomPainter {
       for (int i = 0; i < pointsTransformed.length; i++) {
         Offset start = pointsTransformed[i];
         Offset end = pointsTransformed[(i + 1) % pointsTransformed.length];
+       
         canvas.drawLine(start, end, linePaint);
         canvas.drawCircle(start, 4, pointPaint);
+  
       }
 
       TextSpan textSpan = TextSpan(
-      text: room.roomName,
+      text: currentRoomName,
       style: textStyle,
       );
 
@@ -176,7 +201,6 @@ class PointsPainter extends CustomPainter {
       minWidth: 0,
       maxWidth: size.width,
       );
-
 
       sumdX = 0;
       sumdY = 0;

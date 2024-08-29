@@ -55,7 +55,8 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-   - assets/Building1.json
+   - assets/buildings.json
+   - assets/members.json
    - assets/fonts/
    - assets/images/
 
