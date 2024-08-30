@@ -28,10 +28,11 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   int institutionId = 1;
   int buildingId = 1;
   String floorName = "GroundFloor";
-  String _name = "";
+  String personName = "";
 
   String personRoom = "";
-  String personName = "";
+
+  String designation = "";
 
   Map<String, dynamic>? jsonData;
   List<Room> roomsOnFloor = <Room>[];
@@ -39,20 +40,28 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   @override
   void initState() {
     super.initState();
-    findPersonLocation();
+    findingRoomPersonJson();
     buildingOffsetsLoad();
   }
 
-  void refresh(name)
+  void refreshName(name)
   {
     setState((){
-      _name = name;
-      if(_name != "")
-      {findPersonLocation();}   
+     personName = name;
+      if(personName != "")
+      {findingRoomPersonJson();}   
     });
   }
 
-  Future<void> findPersonLocation() async {
+  void changeFloor(floor)
+  {
+    setState((){
+      floorName = floor;
+      buildingOffsetsLoad();
+    });
+  }
+
+  Future<void> findingRoomPersonJson() async {
     // Load the JSON file
     String jsonString = await rootBundle.loadString('assets/members.json');
     
@@ -62,18 +71,37 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
 
       // Find the specific building by institution_id and building_id
       Map<String,dynamic> person = jsonData?['institution_members']?.firstWhere((member) =>
-      member['name'] == _name,
+      member['name'] == personName,
       orElse: () => null);
 
       personRoom = person['manual_location'];
-      personName = person['name'];
     });
   }
+
+  Future<void> findDesignationPersonJson() async {
+    // Load the JSON file
+    String jsonString = await rootBundle.loadString('assets/members.json');
+    
+    // Parse the JSON
+    setState(() {
+      jsonData = json.decode(jsonString);
+
+      // Find the specific building by institution_id and building_id
+      Map<String,dynamic> person = jsonData?['institution_members']?.firstWhere((member) =>
+      member['name'] == personName,
+      orElse: () => null);
+
+      personRoom = person['manual_location'];
+    });
+  }
+
+  
 
   Future<void> buildingOffsetsLoad() async {
     // Load the JSON file
     String jsonString = await rootBundle.loadString('assets/buildings.json');
     
+    roomsOnFloor.clear();
     // Parse the JSON
     setState(() {
       jsonData = json.decode(jsonString);
@@ -152,12 +180,12 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
               TextButton(onPressed: this.zoomOut, child: const Text("-")),
             ]),
             Container(
-                width: 500,
-                height: 400,
+                width: double.infinity,
+                height: 500,
                 color: const Color.fromARGB(255, 255, 255, 255),
                 child: CustomPaint(
                   painter: PointsPainter(
-                      xposition, yposition, scale, roomsOnFloor, this.personRoom, this._name),
+                      xposition, yposition, scale, roomsOnFloor, this.personRoom, this.personName),
                 ))
           ]),
         );
@@ -179,8 +207,7 @@ class PointsPainter extends CustomPainter {
   double translatedTextX = 0;
   double translatedTextY = 0;
 
-  PointsPainter(
-      this.xposition, this.yposition, this.scale, this.roomsOnFloor,this.personRoom, this.personName);
+  PointsPainter(this.xposition, this.yposition, this.scale, this.roomsOnFloor,this.personRoom, this.personName);
 
   @override
   void paint(Canvas canvas, Size size) {

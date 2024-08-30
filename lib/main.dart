@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'draw_points_page.dart';
-// ignore: unused_import
 import 'login.dart';
 
 void main() {

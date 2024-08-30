@@ -5,7 +5,8 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'drop_down_box.dart';
 import 'draw_map_text.dart';
-import 'draw_map.dart';
+//import 'draw_map.dart';
+import 'draw_map_text copy.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -35,6 +36,8 @@ class _SearchPageState extends State<SearchPage> {
 
   final List<DropdownMenuItem<String>> valuesFloor = [
     const DropdownMenuItem(value: 'GroundFloor', child: Text("GroundFloor")),
+    const DropdownMenuItem(value: 'FirstFloor', child: Text("FirstFloor")),
+    const DropdownMenuItem(value: 'SecondFloor', child: Text("SecondFloor"))
   ];
 
   final TextEditingController _searchController = TextEditingController();
@@ -67,9 +70,9 @@ class _SearchPageState extends State<SearchPage> {
       name = _searchController.text;
     });
     loadMemberDetails();
-    _mapDetailsDisplayWidget.currentState?.refresh(name);
+    _mapDetailsDisplayWidget.currentState?.refreshName(name);
     print(name);
-  }  
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +110,7 @@ class _SearchPageState extends State<SearchPage> {
                 ],
               ),
               Row(children: [
-                CustomDropdownButton(value: "Building1", items: valuesBuilding, onChanged: (String? newBuilding) {
+                CustomDropdownButton(value: selectedBuilding, items: valuesBuilding, onChanged: (String? newBuilding) {
                 setState(() {
                   if (newBuilding != null) {
                     selectedBuilding = newBuilding;
@@ -115,16 +118,19 @@ class _SearchPageState extends State<SearchPage> {
                 });
               },
             ),
-                CustomDropdownButton(value: "GroundFloor", items: valuesFloor, onChanged: (String? newFloor) {
+                CustomDropdownButton(value: selectedFloor, items: valuesFloor, onChanged: (String? newFloor) {
                 setState(() {
                   if (newFloor != null) {
                     selectedFloor = newFloor;
                   }
-                });
+                  _mapDetailsDisplayWidget.currentState?.changeFloor(selectedFloor);
+                }
+                
+                );
               },
             ),
             Spacer(),
-            CustomDropdownButton(value: "Person", items: valuesInputType, onChanged: (String? newInputType) {
+            CustomDropdownButton(value: selectedInputType, items: valuesInputType, onChanged: (String? newInputType) {
                 setState(() {
                   if (newInputType != null) {
                     selectedInputType = newInputType;

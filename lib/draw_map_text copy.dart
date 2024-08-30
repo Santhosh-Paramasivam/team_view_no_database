@@ -1,6 +1,4 @@
-// ignore: unnecessary_import
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -12,25 +10,25 @@ class Room {
   Room(this.roomVertices, this.roomName);
 }
 
-class MapDetailsDisplayWidget extends StatefulWidget {
+class MapDisplayWidget extends StatefulWidget {
 
-  MapDetailsDisplayWidget({Key? key}) : super(key: key);
+  MapDisplayWidget({Key? key}) : super(key: key);
 
   @override
-  State<MapDetailsDisplayWidget> createState() => MapDetailsDisplayWidgetState();
+  State<MapDisplayWidget> createState() => _MapDisplayWidgetState();
 }
 
-class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
+class _MapDisplayWidgetState extends State<MapDisplayWidget> {
   int xposition = 0;
   int yposition = 0;
   double scale = 1.0;
 
   int institutionId = 1;
   int buildingId = 1;
-  String floorName = "GroundFloor";
+  String floorName = "SecondFloor";
   String _name = "";
 
-  String personRoom = "";
+  String personRoom = "Space";
   String personName = "";
 
   Map<String, dynamic>? jsonData;
@@ -39,35 +37,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   @override
   void initState() {
     super.initState();
-    findPersonLocation();
     buildingOffsetsLoad();
-  }
-
-  void refresh(name)
-  {
-    setState((){
-      _name = name;
-      if(_name != "")
-      {findPersonLocation();}   
-    });
-  }
-
-  Future<void> findPersonLocation() async {
-    // Load the JSON file
-    String jsonString = await rootBundle.loadString('assets/members.json');
-    
-    // Parse the JSON
-    setState(() {
-      jsonData = json.decode(jsonString);
-
-      // Find the specific building by institution_id and building_id
-      Map<String,dynamic> person = jsonData?['institution_members']?.firstWhere((member) =>
-      member['name'] == _name,
-      orElse: () => null);
-
-      personRoom = person['manual_location'];
-      personName = person['name'];
-    });
   }
 
   Future<void> buildingOffsetsLoad() async {
@@ -157,7 +127,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
                 color: const Color.fromARGB(255, 255, 255, 255),
                 child: CustomPaint(
                   painter: PointsPainter(
-                      xposition, yposition, scale, roomsOnFloor, this.personRoom, this._name),
+                      xposition, yposition, scale, roomsOnFloor),
                 ))
           ]),
         );
@@ -169,8 +139,6 @@ class PointsPainter extends CustomPainter {
   final int yposition;
   final double scale;
   final List<Room> roomsOnFloor;
-  String personRoom;
-  String personName;
   String finalTextDisplayed = "";
   double sumdX = 0;
   double sumdY = 0;
@@ -180,7 +148,7 @@ class PointsPainter extends CustomPainter {
   double translatedTextY = 0;
 
   PointsPainter(
-      this.xposition, this.yposition, this.scale, this.roomsOnFloor,this.personRoom, this.personName);
+      this.xposition, this.yposition, this.scale, this.roomsOnFloor);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -190,16 +158,6 @@ class PointsPainter extends CustomPainter {
       color: const Color.fromARGB(255, 0, 154, 82),
       fontSize: scale*14,
     );
-
-    final personFoundPointPaint = Paint()
-      ..strokeWidth = 10.0
-      ..color = const Color.fromARGB(255, 5, 244, 133)
-      ..strokeCap = StrokeCap.round;
-
-    final personFoundLinePaint = Paint()
-      ..strokeWidth = 2.0
-      ..color = const Color.fromARGB(255, 3, 246, 132)
-      ..strokeCap = StrokeCap.round;
 
     final pointPaint = Paint()
       ..strokeWidth = 10.0
@@ -222,28 +180,14 @@ class PointsPainter extends CustomPainter {
       for (int i = 0; i < pointsTransformed.length; i++) {
         Offset start = pointsTransformed[i];
         Offset end = pointsTransformed[(i + 1) % pointsTransformed.length];
-        if(currentRoomName == personRoom && personName != ""){
-          canvas.drawLine(start, end, personFoundLinePaint);
-          canvas.drawCircle(start, 4, personFoundPointPaint);
-        }
-        else
-        {
-          canvas.drawLine(start, end, linePaint);
-          canvas.drawCircle(start, 4, pointPaint);
-        }
-      }
-
-      if(personRoom == currentRoomName && personName != "")
-      {
-        finalTextDisplayed = personName + "\nin " + currentRoomName;
-      }
-      else
-      {
-        finalTextDisplayed = currentRoomName;
+       
+        canvas.drawLine(start, end, linePaint);
+        canvas.drawCircle(start, 4, pointPaint);
+  
       }
 
       TextSpan textSpan = TextSpan(
-      text: finalTextDisplayed,
+      text: currentRoomName,
       style: textStyle,
       );
 
@@ -256,7 +200,6 @@ class PointsPainter extends CustomPainter {
       minWidth: 0,
       maxWidth: size.width,
       );
-
 
       sumdX = 0;
       sumdY = 0;
@@ -282,7 +225,6 @@ class PointsPainter extends CustomPainter {
         oldDelegate.scale != scale ||
         oldDelegate.roomsOnFloor != roomsOnFloor ||
         oldDelegate.avgdX != avgdX ||
-        oldDelegate.personName != personName ||
         oldDelegate.avgdY != avgdY ;
   }
 }
