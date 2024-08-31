@@ -25,15 +25,18 @@ class _SearchPageState extends State<SearchPage> {
   late bool doDisplayMember;
   late Member memberForMemberDetails;
 
+  late int appUserInstitutionID;
+
   @override
   initState()
   {
     super.initState();
     name = "Default";
     selectedInputType = "Person";
-    //memberForMemberDetails = Member("Default","Building1/GroundFloor/Room1",0,0);
-    memberForMemberDetails = Member("Default","Default",0,0);
+    memberForMemberDetails = Member("Default","1/GroundFloor/Room1",0,0,0);
+    //memberForMemberDetails = Member("Default","Default",0,0);
     doDisplayMemberDetails = false;
+    appUserInstitutionID = 1;
   }
 
 
@@ -69,7 +72,7 @@ class _SearchPageState extends State<SearchPage> {
       jsonData = json.decode(jsonString);
 
       var member = jsonData?["institution_members"]?.firstWhere(
-        (member) => member['name'] == name,
+        (member) => member['name'] == name && member['institution_id'] == appUserInstitutionID,
         orElse: () => null,
       );
 
@@ -77,7 +80,8 @@ class _SearchPageState extends State<SearchPage> {
         doDisplayMemberDetails = true;
         memberForMemberDetails.name = member['name'];
         memberForMemberDetails.id = member['id'];
-        memberForMemberDetails.manualLocation = member['manual_location'];
+        memberForMemberDetails.changeManualLocation(member['manual_location']);
+        memberForMemberDetails.institutionID = appUserInstitutionID;
       } else {
         doDisplayMemberDetails = false;
       }
@@ -120,8 +124,8 @@ class _SearchPageState extends State<SearchPage> {
                 ],
               ),
               Row(children: [
-            //SizedBox(width: 10),
-            //Text(memberForMemberDetails.building + " / " + memberForMemberDetails.floor),
+            SizedBox(width: 10),
+            Text(memberForMemberDetails.buildingID.toString() + " / " + memberForMemberDetails.floor),
             const Spacer(),
             CustomDropdownButton(value: selectedInputType, items: valuesInputType, onChanged: (String? newInputType) {
                 setState(() {

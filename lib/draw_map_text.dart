@@ -13,7 +13,6 @@ class Room {
   Room(this.roomVertices, this.roomName);
 }
 
-
 class MapDetailsDisplayWidget extends StatefulWidget {
 
   const MapDetailsDisplayWidget({super.key});
@@ -23,18 +22,18 @@ class MapDetailsDisplayWidget extends StatefulWidget {
 }
 
 class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
-  int xposition = 0;
-  int yposition = 0;
-  double scale = 1.0;
+  late int xposition;
+  late int yposition;
+  late double scale; 
 
-  int institutionId = 1;
-  int buildingId = 1;
-  String floorName = "GroundFloor";
-  String personName = "";
+  late Member memberSearched;
 
-  String personRoom = "";
+  late int buildingId;
+  late String floorName;
 
-  String designation = "";
+  late String personName;
+
+  late int appUserInstitutionID;
 
   Map<String, dynamic>? jsonData;
   List<Room> roomsOnFloor = <Room>[];
@@ -42,7 +41,21 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   @override
   void initState() {
     super.initState();
-    findingRoomPersonJson();
+
+    memberSearched = Member("Default", "0/B/C", 0, 0,0);
+
+    xposition = 0;
+    yposition = 0;
+    scale = 1.0;
+
+    buildingId = 1;
+
+    personName = "";
+    floorName = "GroundFloor";
+
+    appUserInstitutionID = 1;
+
+    loadingPersonRoom();
     buildingOffsetsLoad();
   }
 
@@ -51,7 +64,8 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
     setState((){
      personName = name;
       if(personName != "")
-      {findingRoomPersonJson();}   
+      {loadingPersonRoom();
+      buildingOffsetsLoad();}   
     });
   }
 
@@ -63,7 +77,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
     });
   }
 
-  Future<void> findingRoomPersonJson() async {
+  Future<void> loadingPersonRoom() async {
   try {
     // Load the JSON file
     String jsonString = await rootBundle.loadString('assets/members.json');
@@ -73,58 +87,46 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
 
       // Find the specific person
       var person = jsonData?['institution_members']?.firstWhere(
-        (member) => member['name'] == personName,
+        (member) => member['name'] == personName && member["institution_id"] == appUserInstitutionID,
         orElse: () => null,
       );
-
+      /* IMPORTANT COMMENT: ONLY THE INSTITUION OF THE USER MUST BE QUERIED */
       // Check if person is null before accessing its properties
-      personRoom = person?['manual_location'] ?? '';
+      memberSearched.changeManualLocation(person?['manual_location'] ?? '1/B/C');
+      memberSearched.name = person?['name'] ?? 'Default';
+      memberSearched.id = person?['id'] ?? 1;
+      memberSearched.institutionID = person?['id'] ?? 1; 
+      print(person);
+      print(personName + appUserInstitutionID.toString());
+      print(appUserInstitutionID);
+      print(memberSearched.manualLocation + memberSearched.name);
     });
   } catch (e) {
     print('Error loading JSON: $e');
   }
 }
 
-
-  Future<void> findDesignationPersonJson() async {
-    // Load the JSON file
-    String jsonString = await rootBundle.loadString('assets/members.json');
-    
-    // Parse the JSON
-    setState(() {
-      jsonData = json.decode(jsonString);
-
-      // Find the specific building by institution_id and building_id
-      Map<String,dynamic> person = jsonData?['institution_members']?.firstWhere((member) =>
-      member['name'] == personName,
-      orElse: () => null);
-
-      personRoom = person['manual_location'];
-    });
-  }
-
-  
-
   Future<void> buildingOffsetsLoad() async {
     // Load the JSON file
     String jsonString = await rootBundle.loadString('assets/buildings.json');
     
     roomsOnFloor.clear();
-    // Parse the JSON
+    print("offset func reached");
+
     setState(() {
       jsonData = json.decode(jsonString);
 
-      // Find the specific building by institution_id and building_id
       var building = jsonData?['buildings']?.firstWhere((building) =>
-          building['insitution_id'] == institutionId &&
-          building['building_id'] == buildingId,
+          building['institution_id'] == appUserInstitutionID &&
+          //building['building_id'] == buildingId,
+          building['building_id'] == memberSearched.buildingID,
           orElse: () => null);
 
-      // If the building exists, access the specified floor data
+      print(building);
       if (building != null) {
-        var floorData = building[floorName];
+        var floorData = building[memberSearched.floor];
+        print(floorData);
         
-        // Iterate over each room on the floor and create Room objects
         floorData?.forEach((key, value) {
           List<Offset> points = (value as List).map<Offset>((item) {
             double x = item[0].toDouble();
@@ -132,7 +134,6 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
             return Offset(x, y);
           }).toList();
 
-          // Add the room to the list
           roomsOnFloor.add(Room(points, key));
         });
       }
@@ -193,7 +194,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
                 color: const Color.fromARGB(255, 255, 255, 255),
                 child: CustomPaint(
                   painter: PointsPainter(
-                      xposition, yposition, scale, roomsOnFloor, this.personRoom, this.personName),
+                      xposition, yposition, scale, roomsOnFloor, memberSearched),
                 ))
           ]),
         );
@@ -205,8 +206,8 @@ class PointsPainter extends CustomPainter {
   final int yposition;
   final double scale;
   final List<Room> roomsOnFloor;
-  String personRoom;
-  String personName;
+  //String personRoom;
+  //String personName;
   String finalTextDisplayed = "";
   double sumdX = 0;
   double sumdY = 0;
@@ -214,8 +215,9 @@ class PointsPainter extends CustomPainter {
   double avgdX = 0;
   double translatedTextX = 0;
   double translatedTextY = 0;
+  Member memberSearched;
 
-  PointsPainter(this.xposition, this.yposition, this.scale, this.roomsOnFloor,this.personRoom, this.personName);
+  PointsPainter(this.xposition, this.yposition, this.scale, this.roomsOnFloor,this.memberSearched);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -257,7 +259,7 @@ class PointsPainter extends CustomPainter {
       for (int i = 0; i < pointsTransformed.length; i++) {
         Offset start = pointsTransformed[i];
         Offset end = pointsTransformed[(i + 1) % pointsTransformed.length];
-        if(currentRoomName == personRoom && personName != ""){
+        if(currentRoomName == memberSearched.room && memberSearched.name != ""){
           canvas.drawLine(start, end, personFoundLinePaint);
           canvas.drawCircle(start, 4, personFoundPointPaint);
         }
@@ -268,9 +270,10 @@ class PointsPainter extends CustomPainter {
         }
       }
 
-      if(personRoom == currentRoomName && personName != "")
+      if(currentRoomName == memberSearched.room && memberSearched.name != "")
       {
-        finalTextDisplayed = "$personName\nin $currentRoomName";
+        //finalTextDisplayed = "$personName\nin $currentRoomName";
+        finalTextDisplayed = memberSearched.name + "\nin " + currentRoomName;
       }
       else
       {
@@ -317,7 +320,7 @@ class PointsPainter extends CustomPainter {
         oldDelegate.scale != scale ||
         oldDelegate.roomsOnFloor != roomsOnFloor ||
         oldDelegate.avgdX != avgdX ||
-        oldDelegate.personName != personName ||
+        oldDelegate.memberSearched != memberSearched ||
         oldDelegate.avgdY != avgdY ;
   }
 }

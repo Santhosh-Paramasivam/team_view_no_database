@@ -1,9 +1,9 @@
 {
     "buildings": [
         {
-            "insitution_id": 1,
+            "institution_id": 1,
             "building_id": 1,
-            "institution_name": "SRMIST",
+            "institution_name": "SRM",
             "BuildingBoundaries": [
                 [80, 110],
                 [350, 110],
