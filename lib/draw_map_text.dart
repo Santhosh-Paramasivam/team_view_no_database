@@ -42,7 +42,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   void initState() {
     super.initState();
 
-    memberSearched = Member("Default", "0/B/C", 0, 0,0);
+    memberSearched = Member("Default", "A/B/C", 0, 0);
 
     xposition = 0;
     yposition = 0;
@@ -63,9 +63,8 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   {
     setState((){
      personName = name;
-      if(personName != "")
-      {loadingPersonRoom();
-      buildingOffsetsLoad();}   
+      loadingPersonRoom();
+      buildingOffsetsLoad();
     });
   }
 
@@ -92,14 +91,16 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
       );
       /* IMPORTANT COMMENT: ONLY THE INSTITUION OF THE USER MUST BE QUERIED */
       // Check if person is null before accessing its properties
-      memberSearched.changeManualLocation(person?['manual_location'] ?? '1/B/C');
+      memberSearched.changeManualLocation(person?['manual_location'] ?? 'A/B/C');
       memberSearched.name = person?['name'] ?? 'Default';
-      memberSearched.id = person?['id'] ?? 1;
-      memberSearched.institutionID = person?['id'] ?? 1; 
-      print(person);
-      print(personName + appUserInstitutionID.toString());
-      print(appUserInstitutionID);
-      print(memberSearched.manualLocation + memberSearched.name);
+      memberSearched.id = person?['id'] ?? 0;
+      memberSearched.institutionID = person?['id'] ?? 0; 
+      //print("Person" + person);
+      //print("person name " + personName);
+      //print(personName + appUserInstitutionID.toString());
+      //print(appUserInstitutionID);
+      //print(memberSearched.manualLocation + memberSearched.name);
+      //print("Building name : " + memberSearched.building);
     });
   } catch (e) {
     print('Error loading JSON: $e');
@@ -111,7 +112,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
     String jsonString = await rootBundle.loadString('assets/buildings.json');
     
     roomsOnFloor.clear();
-    print("offset func reached");
+    ///print("offset func reached");
 
     setState(() {
       jsonData = json.decode(jsonString);
@@ -119,13 +120,14 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
       var building = jsonData?['buildings']?.firstWhere((building) =>
           building['institution_id'] == appUserInstitutionID &&
           //building['building_id'] == buildingId,
-          building['building_id'] == memberSearched.buildingID,
+          building['building_name'] == memberSearched.building,
           orElse: () => null);
 
-      print(building);
+      //print("Building below");
+      //print(building);
       if (building != null) {
         var floorData = building[memberSearched.floor];
-        print(floorData);
+        //print(floorData);
         
         floorData?.forEach((key, value) {
           List<Offset> points = (value as List).map<Offset>((item) {

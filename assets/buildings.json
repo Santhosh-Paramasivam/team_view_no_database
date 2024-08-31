@@ -2,7 +2,7 @@
     "buildings": [
         {
             "institution_id": 1,
-            "building_id": 1,
+            "building_name": "SRMIST",
             "institution_name": "SRM",
             "BuildingBoundaries": [
                 [80, 110],

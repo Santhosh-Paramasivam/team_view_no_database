@@ -33,7 +33,7 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     name = "Default";
     selectedInputType = "Person";
-    memberForMemberDetails = Member("Default","1/GroundFloor/Room1",0,0,0);
+    memberForMemberDetails = Member("Default","SRMIST/GroundFloor/Room1",0,0);
     //memberForMemberDetails = Member("Default","Default",0,0);
     doDisplayMemberDetails = false;
     appUserInstitutionID = 1;
@@ -82,6 +82,7 @@ class _SearchPageState extends State<SearchPage> {
         memberForMemberDetails.id = member['id'];
         memberForMemberDetails.changeManualLocation(member['manual_location']);
         memberForMemberDetails.institutionID = appUserInstitutionID;
+        //print(memberForMemberDetails.building);
       } else {
         doDisplayMemberDetails = false;
       }
@@ -125,7 +126,7 @@ class _SearchPageState extends State<SearchPage> {
               ),
               Row(children: [
             SizedBox(width: 10),
-            Text(memberForMemberDetails.buildingID.toString() + " / " + memberForMemberDetails.floor),
+            Text(memberForMemberDetails.building + " / " + memberForMemberDetails.floor),
             const Spacer(),
             CustomDropdownButton(value: selectedInputType, items: valuesInputType, onChanged: (String? newInputType) {
                 setState(() {
