@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'custom_datatypes/member.dart';
 
 class Room {
   List<Offset> roomVertices;
@@ -12,9 +13,10 @@ class Room {
   Room(this.roomVertices, this.roomName);
 }
 
+
 class MapDetailsDisplayWidget extends StatefulWidget {
 
-  MapDetailsDisplayWidget({Key? key}) : super(key: key);
+  const MapDetailsDisplayWidget({super.key});
 
   @override
   State<MapDetailsDisplayWidget> createState() => MapDetailsDisplayWidgetState();
@@ -62,21 +64,27 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   }
 
   Future<void> findingRoomPersonJson() async {
+  try {
     // Load the JSON file
     String jsonString = await rootBundle.loadString('assets/members.json');
-    
     // Parse the JSON
     setState(() {
       jsonData = json.decode(jsonString);
 
-      // Find the specific building by institution_id and building_id
-      Map<String,dynamic> person = jsonData?['institution_members']?.firstWhere((member) =>
-      member['name'] == personName,
-      orElse: () => null);
+      // Find the specific person
+      var person = jsonData?['institution_members']?.firstWhere(
+        (member) => member['name'] == personName,
+        orElse: () => null,
+      );
 
-      personRoom = person['manual_location'];
+      // Check if person is null before accessing its properties
+      personRoom = person?['manual_location'] ?? '';
     });
+  } catch (e) {
+    print('Error loading JSON: $e');
   }
+}
+
 
   Future<void> findDesignationPersonJson() async {
     // Load the JSON file
@@ -262,7 +270,7 @@ class PointsPainter extends CustomPainter {
 
       if(personRoom == currentRoomName && personName != "")
       {
-        finalTextDisplayed = personName + "\nin " + currentRoomName;
+        finalTextDisplayed = "$personName\nin $currentRoomName";
       }
       else
       {

@@ -11,11 +11,6 @@ class Login extends StatelessWidget {
   String emailInput= 'santhosh123';
   String passwordInput = 'santhosh123';
 
-  void accountDetails()
-  {
-
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -311,14 +306,11 @@ class Login extends StatelessWidget {
         ),
         onPressed: () 
         {
-          if(this.passwordInput == this.passwordInputController.text && this.emailInput == this.emailInputController.text)
-                {
-                  Navigator.push
-                  (
-                    context,
-                    MaterialPageRoute(builder: (context) => const AccountDetails())
-                  );
-                }
+          Navigator.push
+          (
+            context,
+            MaterialPageRoute(builder: (context) => const AccountDetails())
+          );
         },
         child: const Text(
           "Log in",

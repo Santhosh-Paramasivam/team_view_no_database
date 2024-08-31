@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -12,7 +11,7 @@ class Room {
 
 class MapDisplayWidget extends StatefulWidget {
 
-  MapDisplayWidget({Key? key}) : super(key: key);
+  const MapDisplayWidget({super.key});
 
   @override
   State<MapDisplayWidget> createState() => _MapDisplayWidgetState();
@@ -26,7 +25,7 @@ class _MapDisplayWidgetState extends State<MapDisplayWidget> {
   int institutionId = 1;
   int buildingId = 1;
   String floorName = "SecondFloor";
-  String _name = "";
+  final String _name = "";
 
   String personRoom = "Space";
   String personName = "";

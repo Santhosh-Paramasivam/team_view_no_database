@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'drop_down_box.dart';
 import 'draw_map_text.dart';
+import 'custom_datatypes/member.dart';
 
 
 class SearchPage extends StatefulWidget {
@@ -15,13 +16,26 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  String name = "";
+  late String name;
   Map<String, dynamic>? jsonData;
-  int id = 0;
-  String username = "";
-  String selectedInputType = "Person";
-  String selectedBuilding = "Building1";
-  String selectedFloor = "GroundFloor";
+
+  late String selectedInputType;
+
+  late bool doDisplayMemberDetails;
+  late bool doDisplayMember;
+  late Member memberForMemberDetails;
+
+  @override
+  initState()
+  {
+    super.initState();
+    name = "Default";
+    selectedInputType = "Person";
+    //memberForMemberDetails = Member("Default","Building1/GroundFloor/Room1",0,0);
+    memberForMemberDetails = Member("Default","Default",0,0);
+    doDisplayMemberDetails = false;
+  }
+
 
   final List<DropdownMenuItem<String>> valuesInputType = [
     const DropdownMenuItem(value: 'Person', child: Text("Person")),
@@ -29,20 +43,27 @@ class _SearchPageState extends State<SearchPage> {
     const DropdownMenuItem(value: 'Designation', child: Text("Designation")),
   ];
 
-  final List<DropdownMenuItem<String>> valuesBuilding = [
-    const DropdownMenuItem(value: 'Building1', child: Text("Building1")),
-  ];
-
-  final List<DropdownMenuItem<String>> valuesFloor = [
-    const DropdownMenuItem(value: 'GroundFloor', child: Text("GroundFloor")),
-    const DropdownMenuItem(value: 'FirstFloor', child: Text("FirstFloor")),
-    const DropdownMenuItem(value: 'SecondFloor', child: Text("SecondFloor"))
-  ];
-
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget = GlobalKey<MapDetailsDisplayWidgetState>();
 
+  void displayMember() async{
+    setState(() {
+      name = _searchController.text;
+    });
+    await loadMemberDetails();
+    _mapDetailsDisplayWidget.currentState?.refreshName(name);
+  }
+
+  void displayMemberDetails()
+  {
+    setState(() {
+      name = _searchController.text;
+    });
+    loadMemberDetails();
+  }
+
   Future<void> loadMemberDetails() async {
+
     String jsonString = await rootBundle.loadString('assets/members.json');
     setState(() {
       jsonData = json.decode(jsonString);
@@ -53,24 +74,14 @@ class _SearchPageState extends State<SearchPage> {
       );
 
       if (member != null) {
-        username = member['username'];
-        id = member['id'];
-        name = member['name'];
+        doDisplayMemberDetails = true;
+        memberForMemberDetails.name = member['name'];
+        memberForMemberDetails.id = member['id'];
+        memberForMemberDetails.manualLocation = member['manual_location'];
       } else {
-        username = "";
-        id = 0;
-        name = "";
+        doDisplayMemberDetails = false;
       }
     });
-  }
-
-  void displayMember() {
-    setState(() {
-      name = _searchController.text;
-    });
-    loadMemberDetails();
-    _mapDetailsDisplayWidget.currentState?.refreshName(name);
-    print(name);
   }
 
   @override
@@ -109,25 +120,8 @@ class _SearchPageState extends State<SearchPage> {
                 ],
               ),
               Row(children: [
-                CustomDropdownButton(value: selectedBuilding, items: valuesBuilding, onChanged: (String? newBuilding) {
-                setState(() {
-                  if (newBuilding != null) {
-                    selectedBuilding = newBuilding;
-                  }
-                });
-              },
-            ),
-                CustomDropdownButton(value: selectedFloor, items: valuesFloor, onChanged: (String? newFloor) {
-                setState(() {
-                  if (newFloor != null) {
-                    selectedFloor = newFloor;
-                  }
-                  _mapDetailsDisplayWidget.currentState?.changeFloor(selectedFloor);
-                }
-                
-                );
-              },
-            ),
+            //SizedBox(width: 10),
+            //Text(memberForMemberDetails.building + " / " + memberForMemberDetails.floor),
             const Spacer(),
             CustomDropdownButton(value: selectedInputType, items: valuesInputType, onChanged: (String? newInputType) {
                 setState(() {
@@ -140,8 +134,8 @@ class _SearchPageState extends State<SearchPage> {
             ],
             )
             ]),
-            //MemberDetails(username, id, name),
-            MapDetailsDisplayWidget(key: _mapDetailsDisplayWidget)
+            //if(doDisplayMemberDetails) MemberDetails(this.memberForMemberDetails),
+            MapDetailsDisplayWidget(key: _mapDetailsDisplayWidget),
             //MapDisplayWidget()
           ],
         ),
@@ -151,11 +145,9 @@ class _SearchPageState extends State<SearchPage> {
 }
 
 class MemberDetails extends StatelessWidget {
-  final String name;
-  final int id;
-  final String username;
+  final Member member;
 
-  const MemberDetails(this.username, this.id, this.name, {super.key});
+  const MemberDetails(this.member, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -164,9 +156,8 @@ class MemberDetails extends StatelessWidget {
       height: 100,
       child: Column(
         children: [
-          Text("ID: $id"),
-          Text("Name: $name"),
-          Text("Username: $username"),
+          Text("ID: " + member.id.toString()),
+          Text("Name: " + member.name),
         ],
       ),
     );

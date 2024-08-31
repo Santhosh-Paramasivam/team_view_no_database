@@ -6,11 +6,11 @@ class CustomDropdownButton extends StatelessWidget {
   final ValueChanged<String?>? onChanged;
 
   const CustomDropdownButton({
-    Key? key,
+    super.key,
     required this.value,
     required this.items,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

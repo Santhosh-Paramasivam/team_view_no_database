@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'search_page.dart';
+//import 'search_page.dart';
+//import 'search_page_persons.dart';
+import 'search_page_members.dart';
 import 'drop_down.dart';
 
 class AccountDetails extends StatelessWidget
@@ -16,7 +18,7 @@ class AccountDetails extends StatelessWidget
     Navigator.push
     (
       context,
-      MaterialPageRoute(builder: (context) => const SearchPage())
+      MaterialPageRoute(builder: (context) => SearchPage())
     );
   }
   

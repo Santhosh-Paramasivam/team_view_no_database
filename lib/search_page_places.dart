@@ -20,23 +20,11 @@ class _SearchPageState extends State<SearchPage> {
   int id = 0;
   String username = "";
   String selectedInputType = "Person";
-  String selectedBuilding = "Building1";
-  String selectedFloor = "GroundFloor";
 
   final List<DropdownMenuItem<String>> valuesInputType = [
     const DropdownMenuItem(value: 'Person', child: Text("Person")),
     const DropdownMenuItem(value: 'Room',child: Text("Room")),
     const DropdownMenuItem(value: 'Designation', child: Text("Designation")),
-  ];
-
-  final List<DropdownMenuItem<String>> valuesBuilding = [
-    const DropdownMenuItem(value: 'Building1', child: Text("Building1")),
-  ];
-
-  final List<DropdownMenuItem<String>> valuesFloor = [
-    const DropdownMenuItem(value: 'GroundFloor', child: Text("GroundFloor")),
-    const DropdownMenuItem(value: 'FirstFloor', child: Text("FirstFloor")),
-    const DropdownMenuItem(value: 'SecondFloor', child: Text("SecondFloor"))
   ];
 
   final TextEditingController _searchController = TextEditingController();
@@ -68,7 +56,7 @@ class _SearchPageState extends State<SearchPage> {
     setState(() {
       name = _searchController.text;
     });
-    loadMemberDetails();
+    //loadMemberDetails();
     _mapDetailsDisplayWidget.currentState?.refreshName(name);
     print(name);
   }
@@ -109,25 +97,6 @@ class _SearchPageState extends State<SearchPage> {
                 ],
               ),
               Row(children: [
-                CustomDropdownButton(value: selectedBuilding, items: valuesBuilding, onChanged: (String? newBuilding) {
-                setState(() {
-                  if (newBuilding != null) {
-                    selectedBuilding = newBuilding;
-                  }
-                });
-              },
-            ),
-                CustomDropdownButton(value: selectedFloor, items: valuesFloor, onChanged: (String? newFloor) {
-                setState(() {
-                  if (newFloor != null) {
-                    selectedFloor = newFloor;
-                  }
-                  _mapDetailsDisplayWidget.currentState?.changeFloor(selectedFloor);
-                }
-                
-                );
-              },
-            ),
             const Spacer(),
             CustomDropdownButton(value: selectedInputType, items: valuesInputType, onChanged: (String? newInputType) {
                 setState(() {
