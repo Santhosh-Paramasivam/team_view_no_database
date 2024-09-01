@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 //import 'search_page.dart';
 //import 'search_page_persons.dart';
 import 'search_page_members.dart';
-import 'drop_down.dart';
+import 'members_search_bar.dart';
 
 class AccountDetails extends StatelessWidget
 {
-  const AccountDetails({super.key});
+  AccountDetails({super.key});
 
   void logOut(BuildContext context)
   {
@@ -21,18 +21,13 @@ class AccountDetails extends StatelessWidget
       MaterialPageRoute(builder: (context) => SearchPage())
     );
   }
-  
-  void nothing(context)
-  {
-    
-  }
 
-  void dropDown(context)
+  void memberSearchBar(context)
   {
     Navigator.push
     (
       context,
-      MaterialPageRoute(builder: (context) => const IconDropdownPage())
+      MaterialPageRoute(builder: (context) => MemberSearchBar())
     );
   }
 
@@ -49,11 +44,11 @@ class AccountDetails extends StatelessWidget
       ),
       body:Column(children:
         [
-          MenuButton("Set Status", this.nothing),
-          MenuButton("Set Visibility", this.nothing),
+          MenuButton("Set Status", (context){}),
+          MenuButton("Member Search Page", this.memberSearchBar),
           MenuButton("Search members and venues", this.searchPage),
           MenuButton("Log Out", this.logOut),
-          MenuButton("Drop Down", this.dropDown)
+          MenuButton("Search Page", (context){})
         ]
       )
       );

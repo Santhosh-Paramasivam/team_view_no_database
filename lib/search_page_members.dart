@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'drop_down_box.dart';
 import 'draw_map_text.dart';
 import 'custom_datatypes/member.dart';
+import 'members_search_bar copy.dart';
 
 
 class SearchPage extends StatefulWidget {
@@ -24,8 +25,11 @@ class _SearchPageState extends State<SearchPage> {
   late bool doDisplayMemberDetails;
   late bool doDisplayMember;
   late Member memberForMemberDetails;
-
   late int appUserInstitutionID;
+
+  final TextEditingController _searchController = TextEditingController();
+  final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget = GlobalKey<MapDetailsDisplayWidgetState>();
+  final GlobalKey<MemberSearchBarState> _memberSearchBar = GlobalKey<MemberSearchBarState>();
 
   @override
   initState()
@@ -46,9 +50,6 @@ class _SearchPageState extends State<SearchPage> {
     const DropdownMenuItem(value: 'Designation', child: Text("Designation")),
   ];
 
-  final TextEditingController _searchController = TextEditingController();
-  final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget = GlobalKey<MapDetailsDisplayWidgetState>();
-
   void displayMember() async{
     setState(() {
       name = _searchController.text;
@@ -56,6 +57,17 @@ class _SearchPageState extends State<SearchPage> {
     await loadMemberDetails();
     _mapDetailsDisplayWidget.currentState?.refreshName(name);
   }
+
+  void displayMemberNew(String memberName) async{
+    setState(() {
+      name = memberName;
+      print("Received" + name);
+    } 
+    );
+    await loadMemberDetails();
+    _mapDetailsDisplayWidget.currentState?.refreshName(name);
+  }
+
 
   void displayMemberDetails()
   {
@@ -92,11 +104,12 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Search Page"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
+      appBar: MemberSearchBar(_memberSearchBar, displayMemberNew),
+      //AppBar(
+      //  title: const Text("Search Page"),
+      //  backgroundColor: Colors.blue,
+      //   foregroundColor: Colors.white,
+      //),
       body: SizedBox(
         width: double.infinity,
         height: double.infinity,

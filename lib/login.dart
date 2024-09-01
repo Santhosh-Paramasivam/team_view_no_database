@@ -309,7 +309,7 @@ class Login extends StatelessWidget {
           Navigator.push
           (
             context,
-            MaterialPageRoute(builder: (context) => const AccountDetails())
+            MaterialPageRoute(builder: (context) => AccountDetails())
           );
         },
         child: const Text(
