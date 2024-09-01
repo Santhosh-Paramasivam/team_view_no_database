@@ -15,7 +15,8 @@ class MyApp extends StatelessWidget
     (
         title: "TeamView",
         theme: ThemeData(primarySwatch: Colors.blue, visualDensity: VisualDensity.adaptivePlatformDensity),
-        home: Login()
+        home: Login(),
+        debugShowCheckedModeBanner: false,
     );
   }
 }

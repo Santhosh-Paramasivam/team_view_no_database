@@ -2,20 +2,14 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 
-class MemberSearchBar extends StatefulWidget implements PreferredSizeWidget{
-  final void Function(String) displayMemberNew;
-
-  const MemberSearchBar(Key key, this.displayMemberNew);
+class MemberSearchBar extends StatefulWidget {
+  const MemberSearchBar({super.key});
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
-
-
-  @override
-  State<MemberSearchBar> createState() => MemberSearchBarState();
+  State<MemberSearchBar> createState() => _MemberSearchBarState();
 }
 
-class MemberSearchBarState extends State<MemberSearchBar> {
+class _MemberSearchBarState extends State<MemberSearchBar> {
 
   late List<String> searchTerms;
   late List<String> jsonSearchTerms;
@@ -23,8 +17,6 @@ class MemberSearchBarState extends State<MemberSearchBar> {
   late int appUserInstitutionID;
   late String searchedUser;
 
-  late String inputSentBack;
-  late String searchBarLabel;
 
   @override
   initState()
@@ -38,19 +30,11 @@ class MemberSearchBarState extends State<MemberSearchBar> {
     jsonSearchTerms = [];
     appUserInstitutionID = 1;
     updateOptions("");
-    inputSentBack = "";
-    searchBarLabel = "Search People";
-  }
-
-  void updateSearchBarLabel(String query)
-  {
-    searchBarLabel = "Searched " + query;
   }
 
   void sendBackString(String data)
   {
     print("data: " + data);
-    inputSentBack = data;
   }
 
   Future<void> updateOptions(String searchSubstring) async {
@@ -76,7 +60,6 @@ class MemberSearchBarState extends State<MemberSearchBar> {
   });
 }
 
-  /*
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,21 +74,6 @@ class MemberSearchBarState extends State<MemberSearchBar> {
       ),
     );
   }
-  */
-  @override
-  AppBar build(BuildContext context) {
-    return AppBar(
-        title: Text(searchBarLabel),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(onPressed: (){
-            showSearch(context: context, delegate: CustomSearchDelegate(jsonSearchTerms, updateOptions, sendBackString, widget.displayMemberNew, this.updateSearchBarLabel));
-          }, 
-          icon: const Icon(Icons.search))
-        ],
-    );
-  }
 }
 
 class CustomSearchDelegate extends SearchDelegate 
@@ -113,10 +81,8 @@ class CustomSearchDelegate extends SearchDelegate
   List<String> searchTerms;
   final Future<void> Function(String query) updateOptions;
   void Function(String) sendBackString;
-  final void Function(String) displayMemberNew;
-  final void Function(String) updateSearchBarLabel;
 
-  CustomSearchDelegate(this.searchTerms, this.updateOptions, this.sendBackString, this.displayMemberNew, this.updateSearchBarLabel);
+  CustomSearchDelegate(this.searchTerms, this.updateOptions, this.sendBackString);
 
   Future<void> onQueryChanged(String query) async {
     await updateOptions(query);
@@ -132,6 +98,12 @@ class CustomSearchDelegate extends SearchDelegate
           query = "";
         }, 
         icon: Icon(Icons.clear)),
+      IconButton(
+        onPressed: ()
+        {
+          sendBackString(query);
+        }, 
+        icon: Icon(Icons.send)),
     ];
   }
 
@@ -174,10 +146,7 @@ class CustomSearchDelegate extends SearchDelegate
             query = result; 
             matchQuery = [];
             showResults(context);
-            //sendBackString(query);
-            updateSearchBarLabel(query);
-            displayMemberNew(query);
-            close(context, null);
+            sendBackString(query);
             }, 
           child: Text(result))
         );
@@ -210,9 +179,7 @@ class CustomSearchDelegate extends SearchDelegate
             query = result; 
             matchQuery = [];
             showResults(context);
-            //sendBackString(query);
-            updateSearchBarLabel(query);
-            displayMemberNew(query);
+            sendBackString(query);
             close(context, null);
           }, 
           child: Text(result))

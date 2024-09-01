@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 //import 'search_page.dart';
 //import 'search_page_persons.dart';
 import 'search_page_members.dart';
-import 'members_search_bar.dart';
 
 class AccountDetails extends StatelessWidget
 {
@@ -22,15 +21,6 @@ class AccountDetails extends StatelessWidget
     );
   }
 
-  void memberSearchBar(context)
-  {
-    Navigator.push
-    (
-      context,
-      MaterialPageRoute(builder: (context) => MemberSearchBar())
-    );
-  }
-
   @override
   Widget build(BuildContext context)
   {
@@ -45,7 +35,7 @@ class AccountDetails extends StatelessWidget
       body:Column(children:
         [
           MenuButton("Set Status", (context){}),
-          MenuButton("Member Search Page", this.memberSearchBar),
+          MenuButton("Member Search Page", (context){}),
           MenuButton("Search members and venues", this.searchPage),
           MenuButton("Log Out", this.logOut),
           MenuButton("Search Page", (context){})

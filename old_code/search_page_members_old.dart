@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'drop_down_box.dart';
-import 'draw_map_text.dart';
-import 'custom_datatypes/member.dart';
-import 'members_search_bar.dart';
+import '../lib/drop_down_box.dart';
+import '../lib/draw_map_text.dart';
+import '../lib/custom_datatypes/member.dart';
+import '../lib/members_search_bar.dart';
 
 
 class SearchPage extends StatefulWidget {
@@ -27,6 +27,7 @@ class _SearchPageState extends State<SearchPage> {
   late Member memberForMemberDetails;
   late int appUserInstitutionID;
 
+  final TextEditingController _searchController = TextEditingController();
   final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget = GlobalKey<MapDetailsDisplayWidgetState>();
   final GlobalKey<MemberSearchBarState> _memberSearchBar = GlobalKey<MemberSearchBarState>();
 
@@ -37,6 +38,7 @@ class _SearchPageState extends State<SearchPage> {
     name = "Default";
     selectedInputType = "Person";
     memberForMemberDetails = Member("Default","SRMIST/GroundFloor/Room1",0,0);
+    //memberForMemberDetails = Member("Default","Default",0,0);
     doDisplayMemberDetails = false;
     appUserInstitutionID = 1;
   }
@@ -48,9 +50,18 @@ class _SearchPageState extends State<SearchPage> {
     const DropdownMenuItem(value: 'Designation', child: Text("Designation")),
   ];
 
+  void displayMember() async{
+    setState(() {
+      name = _searchController.text;
+    });
+    await loadMemberDetails();
+    _mapDetailsDisplayWidget.currentState?.refreshName(name);
+  }
+
   void displayMemberNew(String memberName) async{
     setState(() {
       name = memberName;
+      print("Received" + name);
     } 
     );
     await loadMemberDetails();
@@ -58,10 +69,10 @@ class _SearchPageState extends State<SearchPage> {
   }
 
 
-  void displayMemberDetails(String memberName)
+  void displayMemberDetails()
   {
     setState(() {
-      name = memberName;
+      name = _searchController.text;
     });
     loadMemberDetails();
   }
@@ -83,6 +94,7 @@ class _SearchPageState extends State<SearchPage> {
         memberForMemberDetails.id = member['id'];
         memberForMemberDetails.changeManualLocation(member['manual_location']);
         memberForMemberDetails.institutionID = appUserInstitutionID;
+        //print(memberForMemberDetails.building);
       } else {
         doDisplayMemberDetails = false;
       }
@@ -92,7 +104,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MemberSearchBar(_memberSearchBar, displayMemberNew, displayMemberDetails),
+      appBar: MemberSearchBar(_memberSearchBar, displayMemberNew),
       //AppBar(
       //  title: const Text("Search Page"),
       //  backgroundColor: Colors.blue,
@@ -104,6 +116,27 @@ class _SearchPageState extends State<SearchPage> {
         child: Column(
           children: <Widget>[
             Column(children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.person),
+                        labelText: 'Search $selectedInputType',
+                        border: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.zero),
+                        ),
+                        suffixIcon: IconButton(
+                          onPressed: displayMember,
+                          icon: const Icon(Icons.search),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               Row(children: [
             SizedBox(width: 10),
             Text(memberForMemberDetails.building + " / " + memberForMemberDetails.floor),
@@ -122,11 +155,6 @@ class _SearchPageState extends State<SearchPage> {
             //if(doDisplayMemberDetails) MemberDetails(this.memberForMemberDetails),
             MapDetailsDisplayWidget(key: _mapDetailsDisplayWidget),
             //MapDisplayWidget()
-            Spacer
-            (
-
-            ),
-            MemberDetails(this.memberForMemberDetails)
           ],
         ),
       ),
