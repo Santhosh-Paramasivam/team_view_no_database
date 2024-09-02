@@ -51,6 +51,8 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   List<Room> roomsOnFloor = <Room>[];
   List<Offset> buildingBoundaries = <Offset>[];
   late Offset centering = Offset(0,0);
+  late Offset previousOffset; 
+  late double initialScale; // To keep track of the previous drag position
 
   @override
   void initState() {
@@ -68,6 +70,8 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
     floorName = "GroundFloor";
 
     appUserInstitutionID = 1;
+    previousOffset = Offset.zero;
+    initialScale = 1.0;
 
     loadingPersonRoom();
     buildingOffsetsLoad();
@@ -209,9 +213,35 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
     });
   }
 
+  void _onPanUpdate(DragUpdateDetails details) {
+    setState(() {
+      xposition -= details.delta.dx.toInt();
+      yposition -= details.delta.dy.toInt();
+    });
+  }
+
+  void _onScaleStart(ScaleStartDetails details) {
+  initialScale = scale;
+  previousOffset = details.focalPoint;
+}
+
+void _onScaleUpdate(ScaleUpdateDetails details) {
+  setState(() {
+    scale = initialScale * details.scale;
+
+    // Handle panning while scaling
+    xposition -= (details.focalPoint.dx - previousOffset.dx).toInt();
+    yposition -= (details.focalPoint.dy - previousOffset.dy).toInt();
+    previousOffset = details.focalPoint;
+  });
+}
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onScaleStart: _onScaleStart,
+      onScaleUpdate: _onScaleUpdate,
+      child: Container(
           child: Column(children: [
             Row(children: [
               TextButton(onPressed: this.moveLeft, child: const Text("<")),
@@ -230,7 +260,8 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
                       xposition, yposition, scale, roomsOnFloor, memberSearched, buildingBoundaries, centering),
                 ))
           ]),
-        );
+        )
+    );
   }
 }
 
