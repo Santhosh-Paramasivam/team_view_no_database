@@ -2,24 +2,11 @@ import 'package:flutter/material.dart';
 //import 'search_page.dart';
 //import 'search_page_persons.dart';
 import 'search_page_members.dart';
+import 'status_and_visibility.dart';
 
 class AccountDetails extends StatelessWidget
 {
   AccountDetails({super.key});
-
-  void logOut(BuildContext context)
-  {
-    Navigator.pop(context);
-  }
-
-  void searchPage(context)
-  {
-    Navigator.push
-    (
-      context,
-      MaterialPageRoute(builder: (context) => SearchPage())
-    );
-  }
 
   @override
   Widget build(BuildContext context)
@@ -34,10 +21,25 @@ class AccountDetails extends StatelessWidget
       ),
       body:Column(children:
         [
-          MenuButton("Set Status", (context){}),
+          MenuButton("Status And Visibility", (context)
+          {
+            Navigator.push
+            (
+              context,
+              MaterialPageRoute(builder: (context) => StatusAndVisibility())
+            );
+          }),
           MenuButton("Member Search Page", (context){}),
-          MenuButton("Search members and venues", this.searchPage),
-          MenuButton("Log Out", this.logOut),
+          MenuButton("Search members and venues", (context){
+            Navigator.push
+            (
+              context,
+              MaterialPageRoute(builder: (context) => SearchPage())
+            );
+          }),
+          MenuButton("Log Out", (context){
+            Navigator.pop(context);
+          }),
           MenuButton("Search Page", (context){})
         ]
       )

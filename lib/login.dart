@@ -104,7 +104,7 @@ class Login extends StatelessWidget {
   /// Section Widget
   Widget _buildEmailInput(BuildContext context) {
     return SizedBox(
-      width: 322,
+      width: double.infinity,
       child: TextFormField(
         focusNode: FocusNode(),
         autofocus: true,
@@ -173,7 +173,7 @@ class Login extends StatelessWidget {
   /// Section Widget
   Widget _buildPasswordInput(BuildContext context) {
     return SizedBox(
-      width: 322,
+      width: double.infinity,
       child: TextFormField(
         focusNode: FocusNode(),
         autofocus: true,

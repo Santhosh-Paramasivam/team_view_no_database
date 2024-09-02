@@ -9,8 +9,20 @@ import 'custom_datatypes/member.dart';
 class Room {
   List<Offset> roomVertices;
   String roomName;
+  late Offset roomCenter;
 
-  Room(this.roomVertices, this.roomName);
+  Room(this.roomVertices, this.roomName)
+  {
+    double sumdX = 0;
+    double sumdY = 0;
+    for(Offset roomVertex in roomVertices)
+    {
+      sumdX += roomVertex.dx;
+      sumdY += roomVertex.dy;
+    }
+
+    this.roomCenter = Offset(sumdX/roomVertices.length, sumdY/roomVertices.length);
+  }
 }
 
 class MapDetailsDisplayWidget extends StatefulWidget {
@@ -37,6 +49,8 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
 
   Map<String, dynamic>? jsonData;
   List<Room> roomsOnFloor = <Room>[];
+  List<Offset> buildingBoundaries = <Offset>[];
+  late Offset centering = Offset(0,0);
 
   @override
   void initState() {
@@ -46,7 +60,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
 
     xposition = 0;
     yposition = 0;
-    scale = 1.0;
+    scale = 0.6;
 
     buildingId = 1;
 
@@ -63,8 +77,9 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   {
     setState((){
      personName = name;
-      loadingPersonRoom();
-      buildingOffsetsLoad();
+     scale = 0.6;
+     loadingPersonRoom();
+     buildingOffsetsLoad();
     });
   }
 
@@ -123,13 +138,21 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
           building['building_name'] == memberSearched.building,
           orElse: () => null);
 
-      //print("Building below");
-      //print(building);
       if (building != null) {
         var floorData = building[memberSearched.floor];
-        //print(floorData);
+        var buildingCoordinates = building["BuildingBoundaries"];
+
+        //print(buildingCoordinates);
+        buildingCoordinates?.forEach((item)
+        {
+          double x = item[0].toDouble();
+          double y = item[1].toDouble();
+          buildingBoundaries.add(Offset(x,y));
+        });
+        //print(buildingBoundaries);
         
         floorData?.forEach((key, value) {
+
           List<Offset> points = (value as List).map<Offset>((item) {
             double x = item[0].toDouble();
             double y = item[1].toDouble();
@@ -138,6 +161,14 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
 
           roomsOnFloor.add(Room(points, key));
         });
+
+        for(Room room in roomsOnFloor)
+        {
+          if(room.roomName == memberSearched.room)
+          {
+            centering = room.roomCenter;
+          }
+        }
       }
     });
   }
@@ -196,7 +227,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
                 color: const Color.fromARGB(255, 255, 255, 255),
                 child: CustomPaint(
                   painter: PointsPainter(
-                      xposition, yposition, scale, roomsOnFloor, memberSearched),
+                      xposition, yposition, scale, roomsOnFloor, memberSearched, buildingBoundaries, centering),
                 ))
           ]),
         );
@@ -218,13 +249,16 @@ class PointsPainter extends CustomPainter {
   double translatedTextX = 0;
   double translatedTextY = 0;
   Member memberSearched;
+  List<Offset> buildingBoundaries;
+  Offset roomCentering;
 
-  PointsPainter(this.xposition, this.yposition, this.scale, this.roomsOnFloor,this.memberSearched);
+  PointsPainter(this.xposition, this.yposition, this.scale, this.roomsOnFloor,this.memberSearched, this.buildingBoundaries, this.roomCentering);
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
-
+    //canvas.translate(size.width/2 - roomCentering.dx, size.height/2 - roomCentering.dy);
+    canvas.translate((size.width/2 - scale*(roomCentering.dx)), (size.height/2 - scale*(roomCentering.dy)));
     final textStyle = TextStyle(
       color: const Color.fromARGB(255, 0, 154, 82),
       fontSize: scale*14,
@@ -250,6 +284,20 @@ class PointsPainter extends CustomPainter {
       ..color = const Color.fromARGB(255, 0, 154, 82)
       ..strokeCap = StrokeCap.round;
 
+    List<Offset> buildingVerticesTranformed = <Offset>[];
+    for(Offset buildingVertex in buildingBoundaries)
+    {
+      Offset transformedBuildingVertex = Offset(scale * (buildingVertex.dx - xposition),scale * (buildingVertex.dy - yposition));
+      buildingVerticesTranformed.add(transformedBuildingVertex);
+    }
+
+    for (int i = 0; i < buildingVerticesTranformed.length; i++) {
+        Offset start = buildingVerticesTranformed[i];
+        Offset end = buildingVerticesTranformed[(i + 1) % buildingVerticesTranformed.length];
+        canvas.drawLine(start, end, linePaint);
+        canvas.drawCircle(start, 4, pointPaint);
+      }
+
     for (Room room in roomsOnFloor) {
       String currentRoomName = room.roomName;
     
@@ -262,6 +310,7 @@ class PointsPainter extends CustomPainter {
         Offset start = pointsTransformed[i];
         Offset end = pointsTransformed[(i + 1) % pointsTransformed.length];
         if(currentRoomName == memberSearched.room && memberSearched.name != ""){
+          //canvas.translate(room.roomCenter.dx, room.roomCenter.dy);
           canvas.drawLine(start, end, personFoundLinePaint);
           canvas.drawCircle(start, 4, personFoundPointPaint);
         }
