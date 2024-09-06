@@ -6,10 +6,10 @@ class MemberSearchBar extends StatefulWidget implements PreferredSizeWidget{
   final void Function(String) displayMemberNew;
   final void Function(String) displayMemberDetails;
 
-  const MemberSearchBar(Key key, this.displayMemberNew, this.displayMemberDetails);
+  const MemberSearchBar(Key key, this.displayMemberNew, this.displayMemberDetails, {super.key});
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
 
   @override
@@ -45,7 +45,7 @@ class MemberSearchBarState extends State<MemberSearchBar> {
 
   void updateSearchBarLabel(String query)
   {
-    searchBarLabel = "Searched " + query;
+    searchBarLabel = "Searched $query";
   }
 
   void sendBackString(String data)
@@ -130,7 +130,7 @@ class CustomSearchDelegate extends SearchDelegate
         {
           query = "";
         }, 
-        icon: Icon(Icons.clear)),
+        icon: const Icon(Icons.clear)),
     ];
   }
 

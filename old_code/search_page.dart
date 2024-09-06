@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'drop_down_box.dart';
-import 'draw_map_text.dart';
+import 'package:team_view_no_database_windows/drop_down_box.dart';
+import 'package:team_view_no_database_windows/draw_map_text.dart';
 
 
 class SearchPage extends StatefulWidget {

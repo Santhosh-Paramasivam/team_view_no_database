@@ -11,7 +11,8 @@
             "institution_id":1,
             "status":"Available",
             "department":"CSE",
-            "class":"C"
+            "class":"C",
+            "register_id":"RA2211003050187"
         },
         {
             "id": 2,
@@ -23,7 +24,8 @@
             "institution_id":1,
             "status":"Available",
             "department":"CSE",
-            "class":"C"
+            "class":"C",
+            "register_id":"RA2211003050187"
         },
         {
             "id": 3,
@@ -35,7 +37,8 @@
             "user_role":"Professor",
             "institution_id":1,
             "status":"Available",
-            "department":"CSE"
+            "department":"CSE",
+            "faculty_id":"FET?"
         }
     ]
 }

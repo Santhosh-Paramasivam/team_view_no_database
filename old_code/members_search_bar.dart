@@ -34,7 +34,7 @@ class _MemberSearchBarState extends State<MemberSearchBar> {
 
   void sendBackString(String data)
   {
-    print("data: " + data);
+    print("data: $data");
   }
 
   Future<void> updateOptions(String searchSubstring) async {
@@ -55,7 +55,7 @@ class _MemberSearchBarState extends State<MemberSearchBar> {
     print("Members with name containing '$searchSubstring':");
     for (var member in filteredMembers) {
     print((member as Map<String, dynamic>)['name']);
-    jsonSearchTerms.add((member as Map<String, dynamic>)['name']); // Cast to Map<String, dynamic>
+    jsonSearchTerms.add((member)['name']); // Cast to Map<String, dynamic>
     }
   });
 }
@@ -64,7 +64,7 @@ class _MemberSearchBarState extends State<MemberSearchBar> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Search People"),
+        title: const Text("Search People"),
         actions: [
           IconButton(onPressed: (){
             showSearch(context: context, delegate: CustomSearchDelegate(jsonSearchTerms, updateOptions, sendBackString));
@@ -97,13 +97,13 @@ class CustomSearchDelegate extends SearchDelegate
         {
           query = "";
         }, 
-        icon: Icon(Icons.clear)),
+        icon: const Icon(Icons.clear)),
       IconButton(
         onPressed: ()
         {
           sendBackString(query);
         }, 
-        icon: Icon(Icons.send)),
+        icon: const Icon(Icons.send)),
     ];
   }
 

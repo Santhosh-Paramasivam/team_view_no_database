@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import '../lib/drop_down_box.dart';
-import '../lib/draw_map_text.dart';
-import '../lib/custom_datatypes/member.dart';
-import '../lib/members_search_bar.dart';
+import 'package:team_view_no_database_windows/drop_down_box.dart';
+import 'package:team_view_no_database_windows/draw_map_text.dart';
+import 'package:team_view_no_database_windows/custom_datatypes/member.dart';
+import 'package:team_view_no_database_windows/members_search_bar.dart';
 
 
 class SearchPage extends StatefulWidget {
@@ -61,7 +61,7 @@ class _SearchPageState extends State<SearchPage> {
   void displayMemberNew(String memberName) async{
     setState(() {
       name = memberName;
-      print("Received" + name);
+      print("Received$name");
     } 
     );
     await loadMemberDetails();
@@ -138,8 +138,8 @@ class _SearchPageState extends State<SearchPage> {
                 ],
               ),
               Row(children: [
-            SizedBox(width: 10),
-            Text(memberForMemberDetails.building + " / " + memberForMemberDetails.floor),
+            const SizedBox(width: 10),
+            Text("${memberForMemberDetails.building} / ${memberForMemberDetails.floor}"),
             const Spacer(),
             CustomDropdownButton(value: selectedInputType, items: valuesInputType, onChanged: (String? newInputType) {
                 setState(() {
@@ -174,8 +174,8 @@ class MemberDetails extends StatelessWidget {
       height: 100,
       child: Column(
         children: [
-          Text("ID: " + member.id.toString()),
-          Text("Name: " + member.name),
+          Text("ID: ${member.id}"),
+          Text("Name: ${member.name}"),
         ],
       ),
     );

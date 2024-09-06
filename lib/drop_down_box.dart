@@ -4,12 +4,14 @@ class CustomDropdownButton extends StatelessWidget {
   final String? value;
   final List<DropdownMenuItem<String>> items;
   final ValueChanged<String?>? onChanged;
+  final EdgeInsets padding;
 
   const CustomDropdownButton({
     super.key,
     required this.value,
     required this.items,
     required this.onChanged,
+    required this.padding
   });
 
   @override
@@ -21,7 +23,8 @@ class CustomDropdownButton extends StatelessWidget {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          padding: const EdgeInsets.fromLTRB(10, 2, 10, 2),
+          padding: padding,
+          //isExpanded: true,
           alignment: AlignmentDirectional.centerEnd,
           value: value,
           hint: const Text("Person", style: TextStyle(color: Colors.grey)),

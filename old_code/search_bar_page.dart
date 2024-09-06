@@ -12,7 +12,7 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Search People"),
+        title: const Text("Search People"),
         actions: [
           IconButton(onPressed: (){
             showSearch(context: context, delegate: CustomSearchDelegate());
@@ -42,7 +42,7 @@ class CustomSearchDelegate extends SearchDelegate
         {
           query = "";
         }, 
-        icon: Icon(Icons.clear)),
+        icon: const Icon(Icons.clear)),
     ];
   }
 

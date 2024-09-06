@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 //import 'search_page_persons.dart';
 import 'search_page_members.dart';
 import 'status_and_visibility.dart';
+import 'search_page_room.dart';
 
 class AccountDetails extends StatelessWidget
 {
-  AccountDetails({super.key});
+  const AccountDetails({super.key});
 
   @override
   Widget build(BuildContext context)
@@ -26,15 +27,20 @@ class AccountDetails extends StatelessWidget
             Navigator.push
             (
               context,
-              MaterialPageRoute(builder: (context) => StatusAndVisibility())
+              MaterialPageRoute(builder: (context) => const StatusAndVisibility())
             );
           }),
-          MenuButton("Member Search Page", (context){}),
+          MenuButton("Room Search Page",  (context){
+            Navigator.push
+            (
+              context,
+              MaterialPageRoute(builder: (context) => const RoomSearchPage())
+            );}),
           MenuButton("Search members and venues", (context){
             Navigator.push
             (
               context,
-              MaterialPageRoute(builder: (context) => SearchPage())
+              MaterialPageRoute(builder: (context) => const SearchPage())
             );
           }),
           MenuButton("Log Out", (context){

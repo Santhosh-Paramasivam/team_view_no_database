@@ -36,7 +36,7 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     name = "Default";
     selectedInputType = "Person";
-    memberForMemberDetails = Member("Default","SRMIST/GroundFloor/Room1",0,0);
+    memberForMemberDetails = Member("Default","SRMIST/GroundFloor/Room1",0,0,"Default Role","Default ID","Default Status");
     doDisplayMemberDetails = false;
     appUserInstitutionID = 1;
   }
@@ -76,6 +76,7 @@ class _SearchPageState extends State<SearchPage> {
         (member) => member['name'] == name && member['institution_id'] == appUserInstitutionID,
         orElse: () => null,
       );
+      print(member);
 
       if (member != null) {
         doDisplayMemberDetails = true;
@@ -83,6 +84,18 @@ class _SearchPageState extends State<SearchPage> {
         memberForMemberDetails.id = member['id'];
         memberForMemberDetails.changeManualLocation(member['manual_location']);
         memberForMemberDetails.institutionID = appUserInstitutionID;
+        memberForMemberDetails.role = member['user_role'];
+        memberForMemberDetails.status = member['status'];
+
+        if(memberForMemberDetails.role == "Professor")
+        {
+          memberForMemberDetails.memberID = member['faculty_id'];
+        }
+        else if(memberForMemberDetails.role == "Student")
+        {
+          memberForMemberDetails.memberID = member['register_id'];
+        }
+
       } else {
         doDisplayMemberDetails = false;
       }
@@ -105,8 +118,8 @@ class _SearchPageState extends State<SearchPage> {
           children: <Widget>[
             Column(children: [
               Row(children: [
-            SizedBox(width: 10),
-            Text(memberForMemberDetails.building + " / " + memberForMemberDetails.floor),
+            const SizedBox(width: 10),
+            Text("${memberForMemberDetails.building} / ${memberForMemberDetails.floor}"),
             const Spacer(),
             CustomDropdownButton(value: selectedInputType, items: valuesInputType, onChanged: (String? newInputType) {
                 setState(() {
@@ -115,18 +128,22 @@ class _SearchPageState extends State<SearchPage> {
                   }
                 });
               },
+              padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
             ),
             ],
             )
             ]),
-            //if(doDisplayMemberDetails) MemberDetails(this.memberForMemberDetails),
             MapDetailsDisplayWidget(key: _mapDetailsDisplayWidget),
             //MapDisplayWidget()
-            Spacer
-            (
+            //Spacer
+           // (
 
-            ),
+           // ),
+           const SizedBox(
+            height: 15,
+           ),
             MemberDetails(this.memberForMemberDetails)
+            //if(doDisplayMemberDetails) MapDetailsDisplayWidget(key: _mapDetailsDisplayWidget),
           ],
         ),
       ),
@@ -146,8 +163,13 @@ class MemberDetails extends StatelessWidget {
       height: 100,
       child: Column(
         children: [
-          Text("ID: " + member.id.toString()),
-          Text("Name: " + member.name),
+          //Text("ID: " + member.id.toString()),
+          if(member.name != "Default") Text("Name: ${member.name}"),
+          if(member.name != "Default") Text("Role: ${member.role}"),
+          if(member.role == "Professor") Text("Faculty ID: ${member.memberID}"),
+          if(member.role == "Student") Text("Register Number: ${member.memberID}"),
+          if(member.name != "Default") Text("Status: ${member.status}"),
+          if(member.name != "Default") Text("Location: ${member.building} / ${member.floor} / ${member.room}")
         ],
       ),
     );

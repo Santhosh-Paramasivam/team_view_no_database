@@ -50,7 +50,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   Map<String, dynamic>? jsonData;
   List<Room> roomsOnFloor = <Room>[];
   List<Offset> buildingBoundaries = <Offset>[];
-  late Offset centering = Offset(0,0);
+  late Offset centering = const Offset(0,0);
   late Offset previousOffset; 
   late double initialScale; // To keep track of the previous drag position
 
@@ -58,7 +58,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   void initState() {
     super.initState();
 
-    memberSearched = Member("Default", "A/B/C", 0, 0);
+    memberSearched = Member("Default", "A/B/C", 0, 0, "Default Role","Default ID","Status ID");
 
     xposition = 0;
     yposition = 0;
@@ -81,7 +81,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   {
     setState((){
      personName = name;
-     scale = 0.6;
+     //scale = 0.6;
      loadingPersonRoom();
      buildingOffsetsLoad();
     });
@@ -292,7 +292,7 @@ class PointsPainter extends CustomPainter {
     canvas.translate((size.width/2 - scale*(roomCentering.dx)), (size.height/2 - scale*(roomCentering.dy)));
     final textStyle = TextStyle(
       color: const Color.fromARGB(255, 0, 154, 82),
-      fontSize: scale*14,
+      fontSize: scale*20,
     );
 
     final personFoundPointPaint = Paint()
@@ -352,10 +352,12 @@ class PointsPainter extends CustomPainter {
         }
       }
 
+      
       if(currentRoomName == memberSearched.room && memberSearched.name != "")
       {
         //finalTextDisplayed = "$personName\nin $currentRoomName";
-        finalTextDisplayed = memberSearched.name + "\nin " + currentRoomName;
+        //finalTextDisplayed = memberSearched.name + "\nin " + currentRoomName;
+        finalTextDisplayed = "Person in\n$currentRoomName";
       }
       else
       {
@@ -368,6 +370,7 @@ class PointsPainter extends CustomPainter {
       );
 
       TextPainter textPainter = TextPainter(
+      textAlign: TextAlign.center,
       text: textSpan,
       textDirection: TextDirection.ltr,
       );
@@ -375,6 +378,7 @@ class PointsPainter extends CustomPainter {
       textPainter.layout(
       minWidth: 0,
       maxWidth: size.width,
+
       );
 
 
