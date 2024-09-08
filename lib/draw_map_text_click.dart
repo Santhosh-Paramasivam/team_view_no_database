@@ -230,6 +230,17 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
     return Offset(unscaledPoint.dx - (drawingWindowSize.width/2 - scale*(centering.dx)),unscaledPoint.dy - (drawingWindowSize.height/2 - scale*(centering.dy)));
   }
 
+  void _onTapDown(TapDownDetails details)
+  {
+    print("Tap Down Detected");
+    print(details.localPosition);
+
+    if(this.roomPaths[0].contains(scaler(details.localPosition)))
+      print("The rectangle has been toucheth");
+    else
+      print("RIP BOZO");
+  }
+
   void _onScaleStart(ScaleStartDetails details) {
   initialScale = scale;
   previousOffset = details.focalPoint;
@@ -262,6 +273,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
             (
               onScaleStart: _onScaleStart,
               onScaleUpdate: _onScaleUpdate,
+              onTapDown: _onTapDown,
               child: Container(
                 width: double.infinity,
                 height: 500,

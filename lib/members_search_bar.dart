@@ -6,7 +6,7 @@ class MemberSearchBar extends StatefulWidget implements PreferredSizeWidget{
   final void Function(String) displayMemberNew;
   final void Function(String) displayMemberDetails;
 
-  const MemberSearchBar(Key key, this.displayMemberNew, this.displayMemberDetails, {super.key});
+  const MemberSearchBar(Key key, this.displayMemberNew, this.displayMemberDetails);
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
