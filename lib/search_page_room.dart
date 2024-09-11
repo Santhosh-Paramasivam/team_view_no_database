@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'drop_down_box.dart';
-import 'draw_map_text.dart';
+import 'draw_map_text_click.dart';
+
+class RoomEventDetails {
+  String roomName;
+  String eventName;
+
+  RoomEventDetails(this.roomName, this.eventName);
+}
 
 class RoomSearchPage extends StatefulWidget {
   const RoomSearchPage({super.key});
@@ -11,7 +18,7 @@ class RoomSearchPage extends StatefulWidget {
 
 class _RoomSearchPageState extends State<RoomSearchPage> {
   final List<DropdownMenuItem<String>> valuesBuilding = [
-    const DropdownMenuItem(value: 'Building1', child: Text("Building1")),
+    const DropdownMenuItem(value: 'SRMIST', child: Text("SRMIST")),
   ];
 
   final List<DropdownMenuItem<String>> valuesFloor = [
@@ -20,10 +27,11 @@ class _RoomSearchPageState extends State<RoomSearchPage> {
     const DropdownMenuItem(value: 'SecondFloor', child: Text("SecondFloor"))
   ];
 
-  String selectedBuilding = "Building1";
+  String selectedBuilding = "SRMIST";
   String selectedFloor = "GroundFloor";
 
-  final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget = GlobalKey<MapDetailsDisplayWidgetState>();
+  final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget =
+      GlobalKey<MapDetailsDisplayWidgetState>();
 
   @override
   Widget build(BuildContext context) {
@@ -37,27 +45,40 @@ class _RoomSearchPageState extends State<RoomSearchPage> {
           Container(
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,  // Ensure Row shrinks to fit
+              mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween, // Ensure Row shrinks to fit
               children: [
-                CustomDropdownButton(value: selectedBuilding, items: valuesBuilding, onChanged: (String? chosenBuilding) {
-                setState(() {
-                  if (chosenBuilding != null) {
-                    selectedBuilding = chosenBuilding;
-                  }
-                });
-              },
-              padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
-            ),
-                CustomDropdownButton(value: selectedFloor, items: valuesFloor, onChanged: (String? newFloor) {
-                setState(() {
-                  if (newFloor != null) {
-                    selectedFloor = selectedBuilding;
-                  }
-                });
-              },
-              padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
-            ),
-              const Spacer(),
+                CustomDropdownButton(
+                  value: selectedBuilding,
+                  items: valuesBuilding,
+                  onChanged: (String? chosenBuilding) {
+                    setState(() {
+                      if (chosenBuilding != null) {
+                        selectedBuilding = chosenBuilding;
+                        _mapDetailsDisplayWidget.currentState!
+                            .changeFloorAndBuilding(
+                                selectedFloor, selectedBuilding);
+                      }
+                    });
+                  },
+                  padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+                ),
+                CustomDropdownButton(
+                  value: selectedFloor,
+                  items: valuesFloor,
+                  onChanged: (String? chosenFloor) {
+                    setState(() {
+                      if (chosenFloor != null) {
+                        selectedFloor = chosenFloor;
+                        _mapDetailsDisplayWidget.currentState!
+                            .changeFloorAndBuilding(
+                                selectedFloor, selectedBuilding);
+                      }
+                    });
+                  },
+                  padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+                ),
+                const Spacer(),
               ],
             ),
           ),

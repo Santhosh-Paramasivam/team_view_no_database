@@ -58,6 +58,7 @@ flutter:
    - assets/buildings.json
    - assets/members.json
    - assets/status.json
+   - assets/events.json
    - assets/fonts/
    - assets/images/
 

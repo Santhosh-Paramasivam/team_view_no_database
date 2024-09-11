@@ -1,0 +1,12 @@
+{
+        "events":
+        [
+                {
+                        "room_name":"Room1",
+                        "event_name":"Discrete Mathematics",
+                        "insitution_id":1,
+                        "floor_name":"GroundFloor",
+                        "building_name":"SRMIST"
+                }
+        ]
+}
