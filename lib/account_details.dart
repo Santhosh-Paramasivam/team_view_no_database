@@ -9,6 +9,7 @@ import 'firebase_query_returndata copy.dart';
 import 'location_set_page.dart';
 import 'firebase_auth.dart';
 import 'auth_testing.dart';
+import 'a.dart';
 
 class AccountDetails extends StatelessWidget
 {
@@ -83,7 +84,7 @@ class AccountDetails extends StatelessWidget
             Navigator.push
             (
               context,
-              MaterialPageRoute(builder: (context) => AuthDetails())
+              MaterialPageRoute(builder: (context) => SnackBarPage())
             );
           }),
         ]
