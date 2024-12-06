@@ -112,7 +112,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
   }
 
   final Stream<int> timerStream1 = Stream<int>.periodic(
-    Duration(seconds: 1),
+    Duration(seconds: 10),
     (count) => count,
   );
 
@@ -443,7 +443,8 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                         }
 
                         if (!eventSnapshot.hasData) {
-                          return GestureDetector(
+                          return RepaintBoundary(
+                            child: GestureDetector(
                             onScaleStart: _onScaleStart,
                             onScaleUpdate: _onScaleUpdate,
                             onDoubleTapDown: _onDoubleTapDown,
@@ -468,44 +469,52 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                                 ]),
                               ),
                             ),
-                          );
+                          ));
                         }
 
                         // Populate eventDetails with data from eventSnapshot
                         List<Map<String, dynamic>> eventDetails = [];
+                        Map<String, Map<String,dynamic>> eventDetailsOptimized = {};
+
                         for (var doc in eventSnapshot.data!.docs) {
                           eventDetails.add(doc.data() as Map<String, dynamic>);
                         }
 
                         for (Map<String, dynamic> eventDetail in eventDetails) {
-                          //(eventDetail);
+                          String location = eventDetail['room'];
+                          eventDetailsOptimized.addAll({location:eventDetail});
                         }
 
-                        return GestureDetector(
-                          onScaleStart: _onScaleStart,
-                          onScaleUpdate: _onScaleUpdate,
-                          onDoubleTapDown: _onDoubleTapDown,
-                          onTapDown: _onTapDown,
-                          child: Container(
-                            width: double.infinity,
-                            height: 400,
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            child: CustomPaint(
-                              painter: PointsPainter(
-                                  xposition,
-                                  yposition,
-                                  scale,
-                                  roomsOnFloor,
-                                  buildingBoundaries,
-                                  centering,
-                                  getPathAndSize,
-                                  roomClicked,
-                                  buildingName,
-                                  floorName,
-                                  eventDetails),
+                        print(eventDetailsOptimized);
+
+                        return Column(children: [
+                          GestureDetector(
+                            onScaleStart: _onScaleStart,
+                            onScaleUpdate: _onScaleUpdate,
+                            onDoubleTapDown: _onDoubleTapDown,
+                            onTapDown: _onTapDown,
+                            child: Container(
+                              width: double.infinity,
+                              height: 400,
+                              color: const Color.fromARGB(255, 255, 255, 255),
+                              child: CustomPaint(
+                                painter: PointsPainter(
+                                    xposition,
+                                    yposition,
+                                    scale,
+                                    roomsOnFloor,
+                                    buildingBoundaries,
+                                    centering,
+                                    getPathAndSize,
+                                    roomClicked,
+                                    buildingName,
+                                    floorName,
+                                    eventDetails),
+                              ),
                             ),
                           ),
-                        );
+                          //MemberDetails(eventDetails, eventDetailsOptimized),
+                        ]);
                       },
                     );
                   },
@@ -607,6 +616,7 @@ class PointsPainter extends CustomPainter {
     //roomCentering = Offset(buildingBoundariesSum.dx / buildingBoundaries.length, buildingBoundariesSum.dy / buildingBoundaries.length);
     canvas.translate((size.width / 2 - scale * (roomCentering.dx)),
         (size.height / 2 - scale * (roomCentering.dy)));
+
     for (int i = 0; i < buildingVerticesTranformed.length; i++) {
       Offset start = buildingVerticesTranformed[i];
       Offset end = buildingVerticesTranformed[
@@ -747,9 +757,7 @@ class PointsPainter extends CustomPainter {
     return oldDelegate.xposition != xposition ||
         oldDelegate.yposition != yposition ||
         oldDelegate.scale != scale ||
-        oldDelegate.roomsOnFloor != roomsOnFloor ||
-        oldDelegate.avgdX != avgdX ||
-        oldDelegate.avgdY != avgdY;
+        oldDelegate.roomsOnFloor != roomsOnFloor;
   }
 }
 
@@ -757,7 +765,19 @@ class MemberDetails extends StatelessWidget {
   List<ListTile> eventDetailTiles = <ListTile>[];
   List<Map<String, dynamic>> eventDetails = <Map<String, dynamic>>[];
 
-  MemberDetails(this.eventDetails) {}
+  Map<String, Map<String, dynamic>> eventDetailsOptimized = {};
+
+  MemberDetails(this.eventDetails, this.eventDetailsOptimized) 
+  {
+    var attributeNames = eventDetailsOptimized['Room2']!.keys;
+    for(String attributeName in attributeNames)
+    {
+      eventDetailTiles.add(ListTile(
+                dense: true,
+                title: Text(attributeName + " : " + eventDetails[0][attributeName].toString(), style: TextStyle(fontSize: 12))));
+    }
+    
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -770,15 +790,7 @@ class MemberDetails extends StatelessWidget {
         height: 200,
         child: ListView(
           padding: EdgeInsets.zero,
-          children: <Widget>[
-            ListTile(
-                //subtitle: Text(),
-                dense: true,
-                title: Text("Item 1", style: TextStyle(fontSize: 12))),
-            ListTile(
-                dense: true,
-                title: Text("Item 1", style: TextStyle(fontSize: 12))),
-          ],
+          children: eventDetailTiles
         ));
   }
 }

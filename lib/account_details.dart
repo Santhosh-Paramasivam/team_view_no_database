@@ -10,10 +10,19 @@ import 'location_set_page.dart';
 import 'firebase_auth.dart';
 import 'auth_testing.dart';
 import 'a.dart';
+import 'firebase_connections/singleton_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AccountDetails extends StatelessWidget
 {
-  const AccountDetails({super.key});
+  AccountDetails({super.key});
+
+  final FirebaseAuth _auth = AuthenticationService().firebaseAuth;
+
+  Future<void> signOut() async {
+    await _auth.signOut();
+    print('User signed out');
+  }
 
   @override
   Widget build(BuildContext context)
@@ -28,6 +37,7 @@ class AccountDetails extends StatelessWidget
       ),
       body:Column(children:
         [
+          /*
           MenuButton("Status And Visibility", (context)
           {
             Navigator.push
@@ -36,12 +46,15 @@ class AccountDetails extends StatelessWidget
               MaterialPageRoute(builder: (context) => const StatusAndVisibility())
             );
           }),
+          */
+          /*
           MenuButton("Room Search Page",  (context){
             Navigator.push
             (
               context,
               MaterialPageRoute(builder: (context) => const RoomSearchPage())
             );}),
+            */
           MenuButton("Search members and venues", (context){
             Navigator.push
             (
@@ -49,6 +62,7 @@ class AccountDetails extends StatelessWidget
               MaterialPageRoute(builder: (context) => const SearchPage())
             );
           }),
+          /*
             MenuButton("Firestore Stream", (context){
             Navigator.push
             (
@@ -63,7 +77,9 @@ class AccountDetails extends StatelessWidget
               MaterialPageRoute(builder: (context) => ReturnShowData())
             );
           }),
+          */
           MenuButton("Log Out", (context){
+            signOut();
             Navigator.pop(context);
           }),
           MenuButton("Set Location", (context){
@@ -73,6 +89,7 @@ class AccountDetails extends StatelessWidget
               MaterialPageRoute(builder: (context) => LocationSetPage())
             );
           }),
+          /*
            MenuButton("Auth", (context){
             Navigator.push
             (
@@ -80,6 +97,8 @@ class AccountDetails extends StatelessWidget
               MaterialPageRoute(builder: (context) => AuthPage())
             );
           }),
+          */
+          /*
           MenuButton("Auth Testing", (context){
             Navigator.push
             (
@@ -87,6 +106,7 @@ class AccountDetails extends StatelessWidget
               MaterialPageRoute(builder: (context) => SnackBarPage())
             );
           }),
+          */
         ]
       )
       );

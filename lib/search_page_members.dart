@@ -10,8 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'session_details.dart';
 
-class Member
-{
+class Member {
   String name;
   String rfidLocation;
   int institutionID;
@@ -23,19 +22,18 @@ class Member
   String memberID;
   String status;
 
-  Member(this.name, this.rfidLocation, this.institutionID, this.id, this.role, this.memberID, this.status)
-  {
+  Member(this.name, this.rfidLocation, this.institutionID, this.id, this.role,
+      this.memberID, this.status) {
     List<String> rfidLocationList = rfidLocation.split("/");
     building = rfidLocationList[0];
     floor = rfidLocationList[1];
     room = rfidLocationList[2];
   }
 
-  void changeRFIDLocation(String newRFIDLocation)
-  {
+  void changeRFIDLocation(String newRFIDLocation) {
     rfidLocation = newRFIDLocation;
     List<String> rfidLocationList = rfidLocation.split("/");
-    building= rfidLocationList[0];
+    building = rfidLocationList[0];
     floor = rfidLocationList[1];
     room = rfidLocationList[2];
   }
@@ -59,17 +57,19 @@ class _SearchPageState extends State<SearchPage> {
   late Member memberForMemberDetails;
   late int appUserInstitutionID;
 
-  final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget = GlobalKey<MapDetailsDisplayWidgetState>();
-  final GlobalKey<MemberSearchBarState> _memberSearchBar = GlobalKey<MemberSearchBarState>();
+  final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget =
+      GlobalKey<MapDetailsDisplayWidgetState>();
+  final GlobalKey<MemberSearchBarState> _memberSearchBar =
+      GlobalKey<MemberSearchBarState>();
 
-  Map<String,dynamic> prevPersonDetails = Map<String,dynamic>();
+  Map<String, dynamic> prevPersonDetails = Map<String, dynamic>();
 
   @override
-  initState()
-  {
+  initState() {
     super.initState();
     selectedInputType = "Person";
-    memberForMemberDetails = Member("Default","SRMIST/GroundFloor/Room1",0,"","Default Role","Default ID","Default Status");
+    memberForMemberDetails = Member("Default", "SRMIST/GroundFloor/Room1", 0,
+        "", "Default Role", "Default ID", "Default Status");
     doDisplayMemberDetails = true;
     appUserInstitutionID = 1;
     //name = "Santhosh Paramasivam";
@@ -77,11 +77,10 @@ class _SearchPageState extends State<SearchPage> {
     displayMemberDetails(SessionDetails.name);
   }
 
-  void displayMemberNew(String memberName) async{
+  void displayMemberNew(String memberName) async {
     setState(() {
       name = memberName;
-    } 
-    );
+    });
     _mapDetailsDisplayWidget.currentState?.refreshName(name);
   }
 
@@ -95,8 +94,7 @@ class _SearchPageState extends State<SearchPage> {
         .snapshots();
   }
 
-  void displayMemberDetails(String memberName)
-  {
+  void displayMemberDetails(String memberName) {
     setState(() {
       name = memberName;
     });
@@ -105,76 +103,82 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MemberSearchBar(_memberSearchBar, displayMemberNew, displayMemberDetails),
-      body: SizedBox(
-        width: double.infinity,
-        height: double.infinity,
-        child: Column(children: [
-          StreamBuilder<QuerySnapshot>(
-              stream: fetchUsersStream(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
+        appBar: MemberSearchBar(
+            _memberSearchBar, displayMemberNew, displayMemberDetails),
+        body: SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: Column(
+              children: [
+                StreamBuilder<QuerySnapshot>(
+                  stream: fetchUsersStream(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
                       return Container(
-                    width: double.infinity,
-                    height: 100,
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    child: Text("Error fetching data"));
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Container(
-                width: double.infinity,
-                height: 100,
-                color: const Color.fromARGB(255, 255, 255, 255),
-                child: Center(child: CircularProgressIndicator()));
-                }
-
-                var doc = snapshot.data!.docs.first;
-                Map<String, dynamic> personDetails = doc.data() as Map<String, dynamic>;
-
-                final eq = const DeepCollectionEquality().equals;
-
-                if(!eq(personDetails, prevPersonDetails))
-                {
-                  print("Auto-update data reached");
-
-                    doDisplayMemberDetails = true;
-                    memberForMemberDetails.name = personDetails['name'];
-                    memberForMemberDetails.id = personDetails['id'];
-                    memberForMemberDetails.changeRFIDLocation(personDetails['rfid_location']);
-                    memberForMemberDetails.institutionID = appUserInstitutionID;
-                    memberForMemberDetails.role = personDetails['user_role'];
-                    memberForMemberDetails.status = personDetails['status'];
-
-                    if(memberForMemberDetails.role == "Professor")
-                    {
-                      memberForMemberDetails.memberID = personDetails['faculty_id'];
+                          width: double.infinity,
+                          height: 100,
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                          child: Text("Error fetching data"));
                     }
-                    else if(memberForMemberDetails.role == "Student")
-                    {
-                      memberForMemberDetails.memberID = personDetails['register_id'];
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return Container(
+                          width: double.infinity,
+                          height: 100,
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                          child: Center(child: CircularProgressIndicator()));
                     }
-                  prevPersonDetails = Map.from(personDetails);
-                }
-                return  
-                Column(children: [
-                          Row(children: [
-                              const SizedBox(width: 10),
-                              Padding(padding: const EdgeInsets.fromLTRB(10, 15, 10, 15), 
-                              child:  Text("${memberForMemberDetails.building} / ${memberForMemberDetails.floor} / ${memberForMemberDetails.room}"),),
-                              const Spacer(),
-                            ],
+
+                    var doc = snapshot.data!.docs.first;
+                    Map<String, dynamic> personDetails =
+                        doc.data() as Map<String, dynamic>;
+
+                    final eq = const DeepCollectionEquality().equals;
+
+                    if (!eq(personDetails, prevPersonDetails)) {
+                      print("Auto-update data reached");
+
+                      doDisplayMemberDetails = true;
+                      memberForMemberDetails.name = personDetails['name'];
+                      memberForMemberDetails.id = personDetails['id'];
+                      memberForMemberDetails
+                          .changeRFIDLocation(personDetails['rfid_location']);
+                      memberForMemberDetails.institutionID =
+                          appUserInstitutionID;
+                      memberForMemberDetails.role = personDetails['user_role'];
+                      memberForMemberDetails.status = personDetails['status'];
+
+                      if (memberForMemberDetails.role == "Professor") {
+                        memberForMemberDetails.memberID =
+                            personDetails['faculty_id'];
+                      } else if (memberForMemberDetails.role == "Student") {
+                        memberForMemberDetails.memberID =
+                            personDetails['register_id'];
+                      }
+                      prevPersonDetails = Map.from(personDetails);
+                    }
+
+                    return Column(children: [
+                      Row(
+                        children: [
+                          const SizedBox(width: 10),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(10, 15, 10, 15),
+                            child: Text(
+                                "${memberForMemberDetails.building} / ${memberForMemberDetails.floor} / ${memberForMemberDetails.room}"),
                           ),
-                          MapDetailsDisplayWidget(key: _mapDetailsDisplayWidget),
-                          const SizedBox(
-                              height: 15,
-                          ),
-                          MemberDetails(this.memberForMemberDetails),
-                        ]);
-                    },
+                          const Spacer(),
+                        ],
+                      ),
+                      MapDetailsDisplayWidget(key: _mapDetailsDisplayWidget),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      MemberDetails(this.memberForMemberDetails),
+                    ]);
+                  },
                 ),
-        ],)      
-           )
-    );
+              ],
+            )));
   }
 }
 
@@ -191,11 +195,13 @@ class MemberDetails extends StatelessWidget {
       child: Column(
         children: [
           //Text("ID: " + member.id.toString()),
-          if(member.name != "Default") Text("Name: ${member.name}"),
-          if(member.name != "Default") Text("Role: ${member.role}"),
-          if(member.role == "Professor") Text("Faculty ID: ${member.memberID}"),
-          if(member.role == "Student") Text("Register Number: ${member.memberID}"),
-          if(member.name != "Default") Text("Status: ${member.status}"),
+          if (member.name != "Default") Text("Name: ${member.name}"),
+          if (member.name != "Default") Text("Role: ${member.role}"),
+          if (member.role == "Professor")
+            Text("Faculty ID: ${member.memberID}"),
+          if (member.role == "Student")
+            Text("Register Number: ${member.memberID}"),
+          if (member.name != "Default") Text("Status: ${member.status}"),
           //if(member.name != "Default") Text("Location: ${member.building} / ${member.floor} / ${member.room}")
         ],
       ),

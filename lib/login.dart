@@ -5,6 +5,8 @@ import 'firebase_connections/singleton_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_connections/singleton_firestore.dart';
+import 'session_details.dart';
+import 'building_details.dart';
 
 
 // ignore_for_file: must_be_immutable
@@ -22,12 +24,89 @@ class Login extends StatelessWidget {
     print(passwordInputController.text);
   }
 
-  Future<void> emailLogIn() async {
+  Future<void> loadBuildingFloorNames(institutionID) async {
+
+    try {
+      List<String> buildings = [];
+      List<String> floors = [];
+
+      QuerySnapshot institutionSnapshot = await FirestoreService().firestore
+          .collection('institution_buildings')
+          .where('institution_id',isEqualTo: institutionID)
+          .get();
+
+      for(QueryDocumentSnapshot doc in institutionSnapshot.docs)
+      {
+        String institutionDocName = doc.id;
+        //print("docname : " + institutionDocName);
+
+        QuerySnapshot buildingSnapshot = await FirestoreService().firestore
+          .collection('institution_buildings')
+          .doc(institutionDocName)
+          .collection('buildings')
+          .get();
+
+        for(QueryDocumentSnapshot doc in buildingSnapshot.docs)
+        {
+            String buildingDocName = doc.id;
+            Map <String,dynamic> building = doc.data() as Map<String,dynamic>;
+            //print('building_name : ' + building['building_name']);
+            buildings.add(building['building_name']);
+
+            QuerySnapshot floors_snapshot = await FirestoreService().firestore
+              .collection('institution_buildings')
+              .doc(institutionDocName)
+              .collection('buildings')
+              .doc(buildingDocName)
+              .collection('floors')
+              .get();
+
+            for(QueryDocumentSnapshot doc in floors_snapshot.docs)
+            {
+              Map <String,dynamic> floor = doc.data() as Map<String,dynamic>;
+              //print('floor_name : ' + floor['floor_name']);
+              floors.add(floor['floor_name']);
+            }
+        }
+      }
+
+      BuildingDetails.buildings = buildings;
+      BuildingDetails.floors = floors;
+
+    } catch (error) {
+
+      print('Error fetching data: $error');
+    }
+  }
+
+
+  Future<void> signIn() async {
     try {
       await _auth.signInWithEmailAndPassword(
         email: emailInputController.text,
         password: passwordInputController.text,
       );
+      print(_auth.currentUser?.uid);
+
+      String currentUserID = _auth.currentUser!.uid;
+      print(currentUserID);
+      
+      QuerySnapshot snapshot1 = await FirestoreService().firestore.collection("institution_members")
+                                        .where("id",isEqualTo: currentUserID)
+                                        .limit(1)
+                                        .get();
+
+      for(QueryDocumentSnapshot doc in snapshot1.docs)
+      {
+        Map<String, dynamic> member = doc.data() as Map<String,dynamic>;
+        SessionDetails.email = member['email_id'];
+        SessionDetails.id = _auth.currentUser!.uid;
+        SessionDetails.institution_id = member['institution_id'];
+        SessionDetails.name = member['name'];
+      }
+      
+      print('before loading');
+      await loadBuildingFloorNames(SessionDetails.institution_id);
       print('User signed in');
     } catch (e) {
       print('Failed to sign in: $e');
@@ -327,14 +406,14 @@ class Login extends StatelessWidget {
             vertical: 18,
           ),
         ),
-        onPressed: () 
+        onPressed: () async
         {
-          emailLogIn();
+          await signIn();
           showEnteredDetails();
           Navigator.push
           (
             context,
-            MaterialPageRoute(builder: (context) => const AccountDetails())
+            MaterialPageRoute(builder: (context) => AccountDetails())
           );
         },
         child: const Text(
