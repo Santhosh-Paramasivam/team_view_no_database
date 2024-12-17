@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'firebase_connections/singleton_firestore.dart';
+import '../firebase_connections/singleton_firestore.dart';
 import 'dart:convert';
-import 'building_details.dart';
+import '../building_details.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'dart:async';

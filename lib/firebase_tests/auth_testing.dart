@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'firebase_connections/singleton_auth.dart';
+import '../firebase_connections/singleton_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'session_details.dart';
+import '../session_details.dart';
 
 class AuthDetails extends StatelessWidget
 {
