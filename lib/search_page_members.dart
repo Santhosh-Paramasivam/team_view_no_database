@@ -13,7 +13,7 @@ import 'session_details.dart';
 class Member {
   String name;
   String rfidLocation;
-  int institutionID;
+  String institutionID;
   String id;
   late String floor;
   late String building;
@@ -55,7 +55,7 @@ class _SearchPageState extends State<SearchPage> {
   late bool doDisplayMemberDetails;
   late bool doDisplayMember;
   late Member memberForMemberDetails;
-  late int appUserInstitutionID;
+  late String appUserInstitutionID;
 
   final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget =
       GlobalKey<MapDetailsDisplayWidgetState>();
@@ -68,10 +68,10 @@ class _SearchPageState extends State<SearchPage> {
   initState() {
     super.initState();
     selectedInputType = "Person";
-    memberForMemberDetails = Member("Default", "SRMIST/GroundFloor/Room1", 0,
+    memberForMemberDetails = Member("Default", "SRMIST/GroundFloor/Room1", "",
         "", "Default Role", "Default ID", "Default Status");
     doDisplayMemberDetails = true;
-    appUserInstitutionID = 1;
+    appUserInstitutionID = SessionDetails.institution_id;
     //name = "Santhosh Paramasivam";
     displayMemberNew(SessionDetails.name);
     displayMemberDetails(SessionDetails.name);
@@ -103,7 +103,8 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: MemberSearchBar(
+        appBar: 
+        MemberSearchBar(
             _memberSearchBar, displayMemberNew, displayMemberDetails),
         body: SizedBox(
             width: double.infinity,

@@ -17,7 +17,7 @@ class _AuthPageState extends State<AuthPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  Future<void> loadBuildingFloorNames(institutionID) async {
+  Future<void> loadBuildingFloorNames(String institutionID) async {
 
     try {
       List<String> buildings = [];

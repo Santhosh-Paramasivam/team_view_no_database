@@ -15,7 +15,7 @@ class Login extends StatelessWidget {
 
   TextEditingController emailInputController = TextEditingController();
   TextEditingController passwordInputController = TextEditingController();
-    final FirebaseAuth _auth = AuthenticationService().firebaseAuth;
+  final FirebaseAuth _auth = AuthenticationService().firebaseAuth;
   final FirebaseFirestore _firestore = FirestoreService().firestore;
 
   void showEnteredDetails()
@@ -24,7 +24,7 @@ class Login extends StatelessWidget {
     print(passwordInputController.text);
   }
 
-  Future<void> loadBuildingFloorNames(institutionID) async {
+  Future<void> loadBuildingFloorNames(String institutionID) async {
 
     try {
       List<String> buildings = [];

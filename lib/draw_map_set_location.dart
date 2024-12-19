@@ -54,7 +54,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
 
   late String personName;
 
-  late int appUserInstitutionID;
+  late String appUserInstitutionID;
 
   Map<String, dynamic>? jsonData;
   List<Room> roomsOnFloor = <Room>[];

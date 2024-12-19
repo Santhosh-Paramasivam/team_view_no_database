@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:team_view_no_database_windows/session_details.dart';
 
-class MemberSearchBar extends StatefulWidget implements PreferredSizeWidget{
+class MemberSearchBar extends StatefulWidget implements PreferredSizeWidget {
   final void Function(String) displayMemberNew;
   final void Function(String) displayMemberDetails;
 
@@ -11,196 +11,168 @@ class MemberSearchBar extends StatefulWidget implements PreferredSizeWidget{
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
-
   @override
   State<MemberSearchBar> createState() => MemberSearchBarState();
 }
 
 class MemberSearchBarState extends State<MemberSearchBar> {
-
   late List<String> searchTerms;
-  late List<String> jsonSearchTerms;
-  late Map<String,dynamic> jsonData;
-  late int appUserInstitutionID;
-  late String searchedUser;
-
-  late String inputSentBack;
+  late String appUserInstitutionID;
   late String searchBarLabel;
 
   @override
-  initState()
-  {
-    searchTerms = [
-    'santhosh',
-    'bharath',
-    'arun prasath'
-    ];
-
-    jsonSearchTerms = [];
-    appUserInstitutionID = 1;
-    updateOptions("");
-    inputSentBack = "";
+  initState() {
+    searchTerms = [];
+    appUserInstitutionID = SessionDetails.institution_id;
     searchBarLabel = "Search People";
   }
 
-  void updateSearchBarLabel(String query)
-  {
-    searchBarLabel = "Searched $query";
+  void updateSearchBarLabel(String query) {
+    setState(() {
+      searchBarLabel = "Searched $query";
+    });
   }
 
-  void sendBackString(String data)
-  {
-    inputSentBack = data;
+  Future<List<String>> fetchSearchSuggestions(String query) async {
+    final querySnapshot = await FirebaseFirestore.instance
+    .collection("institution_members")
+    .where("institution_id", isEqualTo: appUserInstitutionID)
+    .where("name", isGreaterThanOrEqualTo: query)
+    .where("name", isLessThanOrEqualTo: "$query\uf8ff")
+    .limit(5)
+    .get();
+
+    return querySnapshot.docs.map((doc) => doc["name"] as String).toList();
   }
-
-  Future<void> updateOptions(String searchSubstring) async {
-  jsonSearchTerms.clear();
-
-  String jsonString = await rootBundle.loadString('assets/members.json');
-  setState(() {
-    jsonData = json.decode(jsonString);
-
-    // Using List<dynamic> to avoid type issues
-    List<dynamic> filteredMembers = jsonData['institution_members']
-        .where((member) =>
-            member['name'] != null &&
-            member['name'].toString().toLowerCase().contains(searchSubstring.toLowerCase()))
-        .toList();
-
-    // Print the filtered members
-    for (var member in filteredMembers) {
-    jsonSearchTerms.add((member as Map<String, dynamic>)['name']); // Cast to Map<String, dynamic>
-    }
-  });
-}
 
   @override
   AppBar build(BuildContext context) {
     return AppBar(
-        title: Text(searchBarLabel),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(onPressed: (){
-            showSearch(context: context, delegate: CustomSearchDelegate(jsonSearchTerms, updateOptions, sendBackString, widget.displayMemberNew, this.updateSearchBarLabel, widget.displayMemberDetails));
-          }, 
-          icon: const Icon(Icons.search))
-        ],
+      title: Text(searchBarLabel),
+      backgroundColor: Colors.blue,
+      foregroundColor: Colors.white,
+      actions: [
+        IconButton(
+          onPressed: () {
+            showSearch(
+              context: context,
+              delegate: CustomSearchDelegate(
+                fetchSearchSuggestions,
+                widget.displayMemberNew,
+                updateSearchBarLabel,
+                widget.displayMemberDetails,
+              ),
+            );
+          },
+          icon: const Icon(Icons.search),
+        )
+      ],
     );
   }
 }
 
-class CustomSearchDelegate extends SearchDelegate 
-{
-  List<String> searchTerms;
-  final Future<void> Function(String query) updateOptions;
-  void Function(String) sendBackString;
+class CustomSearchDelegate extends SearchDelegate {
+  final Future<List<String>> Function(String) fetchSearchSuggestions;
   final void Function(String) displayMemberNew;
   final void Function(String) updateSearchBarLabel;
   final void Function(String) displayMemberDetails;
 
-  CustomSearchDelegate(this.searchTerms, this.updateOptions, this.sendBackString, this.displayMemberNew, this.updateSearchBarLabel, this.displayMemberDetails);
-
-  Future<void> onQueryChanged(String query) async {
-    await updateOptions(query);
-  }
+  CustomSearchDelegate(
+    this.fetchSearchSuggestions,
+    this.displayMemberNew,
+    this.updateSearchBarLabel,
+    this.displayMemberDetails,
+  );
 
   @override
-  List<Widget> buildActions(BuildContext context)
-  {
+  List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        onPressed: ()
-        {
+        onPressed: () {
           query = "";
-        }, 
-        icon: const Icon(Icons.clear)),
+        },
+        icon: const Icon(Icons.clear),
+      ),
     ];
   }
 
   @override
-  Widget buildLeading(BuildContext context)
-  {
+  Widget buildLeading(BuildContext context) {
     return IconButton(
       icon: const Icon(Icons.arrow_back),
-      onPressed: ()
-      {
+      onPressed: () {
         close(context, null);
       },
     );
   }
 
   @override
-  Widget buildResults(BuildContext context)
-  {
-    onQueryChanged(query);
-    List<String> matchQuery = [];
-    for(var person in searchTerms)
-    {
-      if(person.toLowerCase().contains(query.toLowerCase()) && matchQuery.length < 5)
-      {
-        matchQuery.add(person);
-      }
-    }
+  Widget buildResults(BuildContext context) {
+    return FutureBuilder<List<String>>(
+      future: fetchSearchSuggestions(query),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return const Center(child: Text("Error fetching data"));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text("No results found"));
+        }
 
-    return ListView.builder
-    (
-      itemCount: matchQuery.length,
-      itemBuilder: (context, index)
-      {
-        var result = matchQuery[index];
-        return ListTile
-        (
-          title: TextButton(
-          onPressed: ()
-          {
-            query = result; 
-            matchQuery = [];
-            showResults(context);
-            //sendBackString(query);
-            updateSearchBarLabel(query);
-            displayMemberNew(query);
-            displayMemberDetails(query);
-            close(context, null);
-            }, 
-          child: Text(result))
+        final matchQuery = snapshot.data!;
+        return ListView.builder(
+          itemCount: matchQuery.length,
+          itemBuilder: (context, index) {
+            final result = matchQuery[index];
+            return ListTile(
+              title: TextButton(
+                onPressed: () {
+                  query = result;
+                  updateSearchBarLabel(query);
+                  displayMemberNew(query);
+                  displayMemberDetails(query);
+                  close(context, null);
+                },
+                child: Text(result),
+              ),
+            );
+          },
         );
       },
     );
   }
 
   @override
-  Widget buildSuggestions(BuildContext context){
-    List<String> matchQuery = [];
-    for(var person in searchTerms)
-    {
-      if(person.toLowerCase().contains(query.toLowerCase()) && matchQuery.length < 5 && query.isNotEmpty)
-      {
-        matchQuery.add(person);
-      }
-    }
+  Widget buildSuggestions(BuildContext context) {
+    return FutureBuilder<List<String>>(
+      future: fetchSearchSuggestions(query),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return const Center(child: Text("Error fetching data"));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text("No suggestions found"));
+        }
 
-    return ListView.builder
-    (
-      itemCount: matchQuery.length,
-      itemBuilder: (context, index)
-      {
-        var result = matchQuery[index];
-        return ListTile
-        (
-          title: TextButton(
-          onPressed: ()
-          {
-            query = result; 
-            matchQuery = [];
-            showResults(context);
-            //sendBackString(query);
-            updateSearchBarLabel(query);
-            displayMemberNew(query);
-            displayMemberDetails(query);
-            close(context, null);
-          }, 
-          child: Text(result))
+        final matchQuery = snapshot.data!;
+        return ListView.builder(
+          itemCount: matchQuery.length,
+          itemBuilder: (context, index) {
+            final result = matchQuery[index];
+            return ListTile(
+              title: TextButton(
+                onPressed: () {
+                  query = result;
+                  updateSearchBarLabel(query);
+                  displayMemberNew(query);
+                  displayMemberDetails(query);
+                  close(context, null);
+                },
+                child: Text(result),
+              ),
+            );
+          },
         );
       },
     );

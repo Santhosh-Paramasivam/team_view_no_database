@@ -13,7 +13,7 @@ class Member
 {
   String name;
   String rfidLocation;
-  int institutionID;
+  String institutionID;
   String id;
   late String floor;
   late String building;
@@ -77,7 +77,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
 
   late String personName;
 
-  late int appUserInstitutionID;
+  late String appUserInstitutionID;
 
   Map<String, dynamic>? jsonData;
   List<Room> roomsOnFloor = <Room>[];
@@ -98,7 +98,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   void initState() {
     super.initState();
 
-    memberSearched = Member("Default", "A/B/C", 0, "9", "Default Role","Default ID","Status ID");
+    memberSearched = Member("Default", "A/B/C", "", "9", "Default Role","Default ID","Status ID");
 
     xposition = 0;
     yposition = 0;
@@ -116,9 +116,9 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
     void refreshName(name) {
     setState(() {
       personName = name;
-      xposition = 0;  // Reset panning
-      yposition = 0;  // Reset panning
-      scale = 0.6;    // Optionally reset the scale if needed
+      xposition = 0;
+      yposition = 0;
+      scale = 0.6; 
 
       mapLoadingUp = true;
       loadFloors();

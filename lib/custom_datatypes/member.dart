@@ -2,7 +2,7 @@ class Member
 {
   String name;
   String rfidLocation;
-  int institutionID;
+  String institutionID;
   int id;
   late String floor;
   late String building;

@@ -11,8 +11,7 @@ import 'firebase_tests/auth_testing.dart';
 import 'firebase_connections/singleton_auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class AccountDetails extends StatelessWidget
-{
+class AccountDetails extends StatelessWidget {
   AccountDetails({super.key});
 
   final FirebaseAuth _auth = AuthenticationService().firebaseAuth;
@@ -23,18 +22,14 @@ class AccountDetails extends StatelessWidget
   }
 
   @override
-  Widget build(BuildContext context)
-  {
-    return Scaffold
-    (
-      appBar: AppBar
-      (
-        title: const Text("Welcome Back, Santhosh"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body:Column(children:
-        [
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text("Welcome Back, Santhosh"),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
+        body: Column(children: [
           /*
           MenuButton("Status And Visibility", (context)
           {
@@ -53,12 +48,9 @@ class AccountDetails extends StatelessWidget
               MaterialPageRoute(builder: (context) => const RoomSearchPage())
             );}),
             */
-          MenuButton("Search members and venues", (context){
-            Navigator.push
-            (
-              context,
-              MaterialPageRoute(builder: (context) => const SearchPage())
-            );
+          MenuButton("Search members and venues", (context) {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => const SearchPage()));
           }),
           /*
             MenuButton("Firestore Stream", (context){
@@ -76,16 +68,13 @@ class AccountDetails extends StatelessWidget
             );
           }),
           */
-          MenuButton("Log Out", (context){
+          MenuButton("Log Out", (context) {
             signOut();
             Navigator.pop(context);
           }),
-          MenuButton("Set Location", (context){
-            Navigator.push
-            (
-              context,
-              MaterialPageRoute(builder: (context) => LocationSetPage())
-            );
+          MenuButton("Set Location", (context) {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => LocationSetPage()));
           }),
           /*
            MenuButton("Auth", (context){
@@ -105,42 +94,40 @@ class AccountDetails extends StatelessWidget
             );
           }),
           */
-        ]
-      )
-      );
+          /*
+          MenuButton("Search Bar Testing", (context) {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (context) => RealTimeSearchPage()));
+          }),
+          */
+        ]));
   }
 }
 
-class MenuButton extends StatelessWidget
-{
+class MenuButton extends StatelessWidget {
   String label = "";
-  //final VoidCallback onPressed; 
+  //final VoidCallback onPressed;
   //final Function(BuildContext) onPressed;
   final void Function(BuildContext) onPressed;
 
   MenuButton(this.label, this.onPressed, {super.key});
 
   @override
-  Widget build(BuildContext context)
-  {
-    return SizedBox
-        (
-          width: double.infinity,
-          height: 60,
-          child:  TextButton(
-            style: const ButtonStyle
-            (
-              shape: WidgetStatePropertyAll<RoundedRectangleBorder>
-                (
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero,
-                    )
-                )
-            ),
-            onPressed: () => this.onPressed(context), 
-            child: Text(
-              this.label, 
-              style: const TextStyle(fontSize: 18, color: Colors.blue),)),
-        );
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: TextButton(
+          style: const ButtonStyle(
+              shape: WidgetStatePropertyAll<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+            borderRadius: BorderRadius.zero,
+          ))),
+          onPressed: () => this.onPressed(context),
+          child: Text(
+            this.label,
+            style: const TextStyle(fontSize: 18, color: Colors.blue),
+          )),
+    );
   }
 }
