@@ -79,7 +79,6 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
   late Stream eventBroadcastStream;
 
   Stream<QuerySnapshot>? eventStreamObj;
-  Stream<QuerySnapshot>? memberStreamObj;
 
   @override
   void initState() {
@@ -106,16 +105,6 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
         .where("institution_id", isEqualTo: appUserInstitutionID)
         .where("building", isEqualTo: buildingName)
         .where("floor", isEqualTo: floorName)
-        .snapshots();
-
-    memberStreamObj = FirestoreService()
-        .firestore
-        .collection("institution_members")
-        .where("institution_id", isEqualTo: appUserInstitutionID)
-        .where("rfid_location",
-            isGreaterThanOrEqualTo: "$buildingName/$floorName")
-        .where("rfid_location",
-            isLessThanOrEqualTo: "$buildingName/$floorName\uf8ff")
         .snapshots();
 
     timerBroadcastStream = timerStream1.asBroadcastStream();
@@ -190,16 +179,6 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
           .where("institution_id", isEqualTo: appUserInstitutionID)
           .where("building", isEqualTo: buildingName)
           .where("floor", isEqualTo: floorName)
-          .snapshots();
-
-      memberStreamObj = FirestoreService()
-          .firestore
-          .collection("institution_members")
-          .where("institution_id", isEqualTo: appUserInstitutionID)
-          .where("rfid_location",
-              isGreaterThanOrEqualTo: "$buildingName/$floorName")
-          .where("rfid_location",
-              isLessThanOrEqualTo: "$buildingName/$floorName\uf8ff")
           .snapshots();
     });
   }
@@ -430,20 +409,10 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                   height: 500,
                   color: const Color.fromARGB(255, 255, 255, 255),
                   child: Center(child: CircularProgressIndicator()))
-              : StreamBuilder(
-                  stream: eventStreamObj,
-                  builder: (context, eventSnapshot) {
-                    if (eventSnapshot.hasError) {
-                      return Container(
-                        width: double.infinity,
-                        height: 100,
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        child: Text("Error fetching data"),
-                      );
-                    }
-
-                    if (eventSnapshot.connectionState ==
-                        ConnectionState.waiting) {
+              : StreamBuilder<int>(
+                  stream: timerBroadcastStream,
+                  builder: (context, timerSnapshot) {
+                    if (!timerSnapshot.hasData) {
                       return Container(
                           width: double.infinity,
                           height: 500,
@@ -451,50 +420,10 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                           child: Center(child: CircularProgressIndicator()));
                     }
 
-                    if (!eventSnapshot.hasData) {
-                      return RepaintBoundary(
-                          child: GestureDetector(
-                        onScaleStart: _onScaleStart,
-                        onScaleUpdate: _onScaleUpdate,
-                        onDoubleTapDown: _onDoubleTapDown,
-                        onTapDown: _onTapDown,
-                        child: Container(
-                          width: double.infinity,
-                          height: 400,
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                          child: CustomPaint(
-                            painter: PointsPainter(
-                                xposition,
-                                yposition,
-                                scale,
-                                roomsOnFloor,
-                                buildingBoundaries,
-                                centering,
-                                getPathAndSize,
-                                roomClicked,
-                                buildingName,
-                                floorName),
-                          ),
-                        ),
-                      ));
-                    }
-
-                    Map<String, Map<String, dynamic>> eventDetailsOptimized =
-                        {};
-                    Map<String, dynamic> eventDetail = {};
-
-                    for (var doc in eventSnapshot.data!.docs) {
-                      eventDetail = doc.data() as Map<String, dynamic>;
-                      String location = eventDetail['room'];
-                      eventDetailsOptimized.addAll({location: eventDetail});
-                    }
-
-                    print(eventDetailsOptimized);
-
                     return StreamBuilder(
-                      stream: memberStreamObj,
-                      builder: (context, memberSnapshot) {
-                        if (memberSnapshot.hasError) {
+                      stream: eventStreamObj,
+                      builder: (context, eventSnapshot) {
+                        if (eventSnapshot.hasError) {
                           return Container(
                             width: double.infinity,
                             height: 100,
@@ -503,7 +432,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                           );
                         }
 
-                        if (memberSnapshot.connectionState ==
+                        if (eventSnapshot.connectionState ==
                             ConnectionState.waiting) {
                           return Container(
                               width: double.infinity,
@@ -513,9 +442,9 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                                   Center(child: CircularProgressIndicator()));
                         }
 
-                        if (!memberSnapshot.hasData) {
+                        if (!eventSnapshot.hasData) {
                           return RepaintBoundary(
-                              child: GestureDetector(
+                            child: GestureDetector(
                             onScaleStart: _onScaleStart,
                             onScaleUpdate: _onScaleUpdate,
                             onDoubleTapDown: _onDoubleTapDown,
@@ -535,37 +464,28 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                                     getPathAndSize,
                                     roomClicked,
                                     buildingName,
-                                    floorName),
+                                    floorName, [
+                                  {'': ''}
+                                ]),
                               ),
                             ),
                           ));
                         }
 
-                        /*
-                        Map<String, Map<String, dynamic>>
-                            eventDetailsOptimized = {};
-                        Map<String, dynamic> eventDetail = {};
+                        // Populate eventDetails with data from eventSnapshot
+                        List<Map<String, dynamic>> eventDetails = [];
+                        Map<String, Map<String,dynamic>> eventDetailsOptimized = {};
 
                         for (var doc in eventSnapshot.data!.docs) {
-                          eventDetail = doc.data() as Map<String, dynamic>;
+                          eventDetails.add(doc.data() as Map<String, dynamic>);
+                        }
+
+                        for (Map<String, dynamic> eventDetail in eventDetails) {
                           String location = eventDetail['room'];
-                          eventDetailsOptimized.addAll({location: eventDetail});
-                        }
-                        */
-
-                        List<Map<String, dynamic>> attendeesList = [];
-                        for (var doc in memberSnapshot.data!.docs) {
-                          print(doc.data() as Map<String, dynamic>);
-                          Map<String, dynamic> attendee =
-                              doc.data() as Map<String, dynamic>;
-
-                          attendeesList.add(attendee);
+                          eventDetailsOptimized.addAll({location:eventDetail});
                         }
 
-                        print("Member : ");
-                        print(memberSnapshot.data!.size);
-                        int numberOfAttendees = memberSnapshot.data!.size;
-                        //print(memerSnapshot.data!.docs[0].data() as Map<String,dynamic>);
+                        print(eventDetailsOptimized);
 
                         return Column(children: [
                           GestureDetector(
@@ -588,21 +508,18 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                                     getPathAndSize,
                                     roomClicked,
                                     buildingName,
-                                    floorName),
+                                    floorName,
+                                    eventDetails),
                               ),
                             ),
                           ),
-                          MemberDetails(
-                              eventDetailsOptimized,
-                              roomClicked,
-                              floorName,
-                              buildingName,
-                              attendeesList),
+                          //MemberDetails(eventDetails, eventDetailsOptimized),
                         ]);
                       },
                     );
                   },
                 ),
+          //MemberDetails([{}]),
         ],
       ),
     );
@@ -632,6 +549,8 @@ class PointsPainter extends CustomPainter {
   String roomClicked;
   String buildingName;
   String floorName;
+
+  List<Map<String, dynamic>> eventDetails;
 
   final void Function(List<Path>, Size, List<String>) sendPath;
 
@@ -663,7 +582,8 @@ class PointsPainter extends CustomPainter {
       this.sendPath,
       this.roomClicked,
       this.buildingName,
-      this.floorName);
+      this.floorName,
+      this.eventDetails);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -766,6 +686,7 @@ class PointsPainter extends CustomPainter {
       roomPaths.add(roomPath);
       loadedRooms.add(currentRoomName);
 
+
       if (currentRoomName == roomClicked) {
         canvas.drawPath(roomPath, pathPaintStrokePresent);
         canvas.drawPath(roomPath, pathPaintFill);
@@ -820,66 +741,20 @@ class PointsPainter extends CustomPainter {
 
 class MemberDetails extends StatelessWidget {
   List<ListTile> eventDetailTiles = <ListTile>[];
+  List<Map<String, dynamic>> eventDetails = <Map<String, dynamic>>[];
 
   Map<String, Map<String, dynamic>> eventDetailsOptimized = {};
-  String roomClicked;
-  String floorName;
-  String buildingName;
-  List<Map<String, dynamic>> attendeesList;
-  late int numberOfAttendees = 0;
 
-  List<Map<String, dynamic>> getAttendeesInRoom(
-      List<Map<String, dynamic>> attendeesList, String location) {
-    List<Map<String, dynamic>> attendeesInRoom = [];
-    for (Map<String, dynamic> attendee in attendeesList) {
-      if (attendee['rfid_location'] == location) {
-        attendeesInRoom.add(attendee);
-        numberOfAttendees++;
-      }
-    }
-
-    return attendeesInRoom;
-  }
-
-  MemberDetails(
-      this.eventDetailsOptimized,
-      this.roomClicked,
-      this.floorName,
-      this.buildingName,
-      this.attendeesList) {
-    if (eventDetailsOptimized[roomClicked] == null) {
-      eventDetailTiles.add(const ListTile(
-        dense: true,
-        title: Text("No events"),
-        minTileHeight: 0,
-      ));
-    }
-    else
+  MemberDetails(this.eventDetails, this.eventDetailsOptimized) 
+  {
+    var attributeNames = eventDetailsOptimized['Room2']!.keys;
+    for(String attributeName in attributeNames)
     {
       eventDetailTiles.add(ListTile(
-      dense: true,
-      title: Text(
-        "Event Name : " + eventDetailsOptimized[roomClicked]!['name'].toString(),
-        style: TextStyle(fontSize: 12),
-      ),
-      minTileHeight: 0,
-    ));
+                dense: true,
+                title: Text(attributeName + " : " + eventDetails[0][attributeName].toString(), style: TextStyle(fontSize: 12))));
     }
-
-      String location = "$buildingName/$floorName/$roomClicked";
-      List<Map<String, dynamic>> attendeesInRoom =
-          getAttendeesInRoom(attendeesList, location);
-
-    eventDetailTiles.add(ListTile(
-        dense: true, title: Text("Number of Attendees : $numberOfAttendees"), minTileHeight: 0,));
-
-    for (Map<String, dynamic> attendee in attendeesInRoom) {
-        eventDetailTiles.add(ListTile(
-          dense: true,
-          title: Text(attendee['name']),
-          minTileHeight: 0,
-        ));
-      }
+    
   }
 
   @override
@@ -889,8 +764,11 @@ class MemberDetails extends StatelessWidget {
           color: Colors.white,
           border: Border.all(color: Colors.grey, width: 1),
         ),
-        width: 500,
+        width: 200,
         height: 200,
-        child: ListView(padding: EdgeInsets.zero, children: eventDetailTiles));
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: eventDetailTiles
+        ));
   }
 }
