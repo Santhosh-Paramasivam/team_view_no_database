@@ -352,11 +352,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
   void _onTapDown(TapDownDetails details) {
     for (int i = 0; i < this.roomPaths.length; i++) {
       if (this.roomPaths[i].contains(scaler(details.localPosition))) {
-        String location = this.buildingName +
-            "/" +
-            this.floorName +
-            "/" +
-            this.loadedRooms[i];
+        String location = "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
 
         print(location);
 
@@ -370,11 +366,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
   void _onDoubleTapDown(TapDownDetails details) async {
     for (int i = 0; i < this.roomPaths.length; i++) {
       if (this.roomPaths[i].contains(scaler(details.localPosition))) {
-        String location = this.buildingName +
-            "/" +
-            this.floorName +
-            "/" +
-            this.loadedRooms[i];
+        String location = "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
 
         print(location);
 
@@ -814,7 +806,8 @@ class PointsPainter extends CustomPainter {
     return oldDelegate.xposition != xposition ||
         oldDelegate.yposition != yposition ||
         oldDelegate.scale != scale ||
-        oldDelegate.roomsOnFloor != roomsOnFloor;
+        oldDelegate.roomsOnFloor != roomsOnFloor ||
+        oldDelegate.roomClicked != roomClicked;
   }
 }
 
@@ -832,7 +825,7 @@ class MemberDetails extends StatelessWidget {
       List<Map<String, dynamic>> attendeesList, String location) {
     List<Map<String, dynamic>> attendeesInRoom = [];
     for (Map<String, dynamic> attendee in attendeesList) {
-      if (attendee['rfid_location'] == location) {
+      if (attendee['rfid_location'] == location && attendee['in_room'] == true) {
         attendeesInRoom.add(attendee);
         numberOfAttendees++;
       }
