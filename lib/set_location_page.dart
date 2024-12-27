@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'drop_down_box.dart';
-import 'draw_map_set_location.dart';
-import 'building_details.dart';
+import 'dropdown_widget.dart';
+import 'set_location_map.dart';
+import 'session_data/building_details.dart';
 
 class RoomEventDetails {
   String roomName;

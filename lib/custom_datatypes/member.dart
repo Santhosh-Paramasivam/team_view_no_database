@@ -10,7 +10,6 @@ class Member
   String role;
   String memberID;
   String status;
-  //int buildingID;
 
   Member(this.name, this.rfidLocation, this.institutionID, this.id, this.role, this.memberID, this.status)
   {

@@ -56,8 +56,13 @@ string_encoding/
 uids/
 
 # incompatible platforms for the project
-
 windows/
 macos/
 linux/
 web/
+
+# vscode config files
+.vscode/
+
+# old reference code
+old_code/

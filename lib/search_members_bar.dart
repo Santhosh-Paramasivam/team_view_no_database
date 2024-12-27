@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:team_view_no_database_windows/session_details.dart';
+import 'package:team_view_no_database_windows/session_data/session_details.dart';
 
 class MemberSearchBar extends StatefulWidget implements PreferredSizeWidget {
   final void Function(String) displayMemberNew;

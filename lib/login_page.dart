@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'account_details.dart';
+import 'options_page.dart';
 import 'firebase_connections/singleton_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_connections/singleton_firestore.dart';
-import 'session_details.dart';
-import 'building_details.dart';
+import 'session_data/session_details.dart';
+import 'session_data/building_details.dart';
 
 
 // ignore_for_file: must_be_immutable
@@ -413,7 +413,7 @@ class Login extends StatelessWidget {
           Navigator.push
           (
             context,
-            MaterialPageRoute(builder: (context) => AccountDetails())
+            MaterialPageRoute(builder: (context) => AppOptions())
           );
         },
         child: const Text(
@@ -429,7 +429,6 @@ class Login extends StatelessWidget {
     );
   }
 
-  /// Section Widget
   Widget _buildGoogleSigninButton(BuildContext context) {
     return Container(
       width: double.maxFinite,
