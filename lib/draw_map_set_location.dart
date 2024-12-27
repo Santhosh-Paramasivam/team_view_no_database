@@ -4,37 +4,31 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'custom_datatypes/member.dart';
 import 'firebase_connections/singleton_firestore.dart';
 import 'session_details.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'building_details.dart';
-
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:logger/logger.dart';
+import 'custom_logger.dart';
 
-class RoomEventDetails {
-  String roomName;
-  String eventName;
+/*
 
-  RoomEventDetails(this.roomName, this.eventName);
-}
+This file contains the following classes:
+
+Room - Dataclass for storing room name, vertices and center point for map plotting purposes
+SetLocationMap - Stateful widget to load in map, event and member details and pass them to map painter
+SetLocationWidgetState - Where the actual code for the above stateful class is present
+MapPainter - Plots the room vertices, and places appropriate names in them.
+EventDetails - Shows event details and attendees
+
+*/
 
 class Room {
   List<Offset> roomVertices;
   String roomName;
-  late Offset roomCenter;
 
-  Room(this.roomVertices, this.roomName) {
-    double sumdX = 0;
-    double sumdY = 0;
-    for (Offset roomVertex in roomVertices) {
-      sumdX += roomVertex.dx;
-      sumdY += roomVertex.dy;
-    }
-
-    this.roomCenter =
-        Offset(sumdX / roomVertices.length, sumdY / roomVertices.length);
-  }
+  Room(this.roomVertices, this.roomName);
 }
 
 class SetLocationMap extends StatefulWidget {
@@ -58,11 +52,10 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
 
   Map<String, dynamic>? jsonData;
   List<Room> roomsOnFloor = <Room>[];
-  List<RoomEventDetails> roomDetails = <RoomEventDetails>[];
   List<Offset> buildingBoundaries = <Offset>[];
-  late Offset centering = const Offset(0, 0);
+  late Offset mapOrigin = const Offset(0, 0);
   late Offset previousOffset;
-  late double initialScale; // To keep track of the previous drag position
+  late double initialScale;
   late Size drawingWindowSize;
 
   late bool mapLoadingUp = true;
@@ -75,11 +68,12 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
 
   String roomClicked = "";
 
-  late Stream<int> timerBroadcastStream;
-  late Stream eventBroadcastStream;
-
   Stream<QuerySnapshot>? eventStreamObj;
   Stream<QuerySnapshot>? memberStreamObj;
+
+  Logger logger = Logger(
+    printer: CustomPrinter("SetLocationState"),
+  );
 
   @override
   void initState() {
@@ -117,30 +111,11 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
         .where("rfid_location",
             isLessThanOrEqualTo: "$buildingName/$floorName\uf8ff")
         .snapshots();
-
-    timerBroadcastStream = timerStream1.asBroadcastStream();
-    eventBroadcastStream = eventStream().asBroadcastStream();
   }
 
-  final Stream<int> timerStream1 = Stream<int>.periodic(
-    Duration(seconds: 10),
-    (count) => count,
-  );
-
-  Stream<QuerySnapshot> eventStream() {
-    //print(appUserInstitutionID as String);
-    //print(buildingName + floorName);
-    return FirestoreService()
-        .firestore
-        .collection("events")
-        .where("institution_id", isEqualTo: appUserInstitutionID)
-        .where("building", isEqualTo: buildingName)
-        .where("floor", isEqualTo: floorName)
-        .snapshots();
-  }
-
+  //When a room is double-tapped, this function sets the users location to that room
   Future<void> updateLocation(String location) async {
-    print("update location reached");
+    logger.i("Update Location Func Reached");
 
     bool inRoom;
 
@@ -174,6 +149,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
     inRoomSnackBar = inRoom;
   }
 
+
   void changeFloorAndBuilding(floor, building) {
     setState(() {
       mapLoadingUp = true;
@@ -181,9 +157,9 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
       buildingName = building;
       roomClicked = "";
       print(floorName);
-      //buildingOffsetsLoad();
       loadFloors();
 
+      //Refreshing the event and member streams to the new floor
       eventStreamObj = FirestoreService()
           .firestore
           .collection("events")
@@ -246,7 +222,6 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
 
     for (List<int> point in building_boundaries) {
       buildingBoundaries.add(Offset(point[0].toDouble(), point[1].toDouble()));
-      //print(Offset(point[0].toDouble(),point[1].toDouble()));
     }
 
     QuerySnapshot snapshot2 = await FirestoreService()
@@ -277,49 +252,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
         roomsOnFloor.add(Room(points, key));
       });
 
-      //for (Room room in roomsOnFloor) {
-      //  if (room.roomName == memberSearched.room) {
-      //    centering = room.roomCenter;
-      //  }
-      //}
-
-      mapLoadingUp = false;
-    });
-  }
-
-  void moveRight() {
-    setState(() {
-      xposition -= 20;
-    });
-  }
-
-  void moveUp() {
-    setState(() {
-      yposition += 20;
-    });
-  }
-
-  void moveDown() {
-    setState(() {
-      yposition -= 20;
-    });
-  }
-
-  void moveLeft() {
-    setState(() {
-      xposition += 20;
-    });
-  }
-
-  void zoomIn() {
-    setState(() {
-      scale += 0.3;
-    });
-  }
-
-  void zoomOut() {
-    setState(() {
-      scale -= 0.3;
+            mapLoadingUp = false;
     });
   }
 
@@ -344,15 +277,16 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
   Offset scaler(Offset unscaledPoint) {
     return Offset(
         unscaledPoint.dx -
-            (drawingWindowSize.width / 2 - scale * (centering.dx)),
+            (drawingWindowSize.width / 2 - scale * (mapOrigin.dx)),
         unscaledPoint.dy -
-            (drawingWindowSize.height / 2 - scale * (centering.dy)));
+            (drawingWindowSize.height / 2 - scale * (mapOrigin.dy)));
   }
 
   void _onTapDown(TapDownDetails details) {
     for (int i = 0; i < this.roomPaths.length; i++) {
       if (this.roomPaths[i].contains(scaler(details.localPosition))) {
-        String location = "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
+        String location =
+            "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
 
         print(location);
 
@@ -366,7 +300,8 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
   void _onDoubleTapDown(TapDownDetails details) async {
     for (int i = 0; i < this.roomPaths.length; i++) {
       if (this.roomPaths[i].contains(scaler(details.localPosition))) {
-        String location = "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
+        String location =
+            "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
 
         print(location);
 
@@ -406,16 +341,6 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
     return Container(
       child: Column(
         children: [
-          Row(
-            children: [
-              TextButton(onPressed: this.moveLeft, child: const Text("<")),
-              TextButton(onPressed: this.moveRight, child: const Text(">")),
-              TextButton(onPressed: this.moveUp, child: const Text("^")),
-              TextButton(onPressed: this.moveDown, child: const Text("v")),
-              TextButton(onPressed: this.zoomIn, child: const Text("+")),
-              TextButton(onPressed: this.zoomOut, child: const Text("-")),
-            ],
-          ),
           mapLoadingUp
               ? Container(
                   width: double.infinity,
@@ -455,13 +380,13 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                           height: 400,
                           color: const Color.fromARGB(255, 255, 255, 255),
                           child: CustomPaint(
-                            painter: PointsPainter(
+                            painter: MapPainter(
                                 xposition,
                                 yposition,
                                 scale,
                                 roomsOnFloor,
                                 buildingBoundaries,
-                                centering,
+                                mapOrigin,
                                 getPathAndSize,
                                 roomClicked,
                                 buildingName,
@@ -517,13 +442,13 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                               height: 400,
                               color: const Color.fromARGB(255, 255, 255, 255),
                               child: CustomPaint(
-                                painter: PointsPainter(
+                                painter: MapPainter(
                                     xposition,
                                     yposition,
                                     scale,
                                     roomsOnFloor,
                                     buildingBoundaries,
-                                    centering,
+                                    mapOrigin,
                                     getPathAndSize,
                                     roomClicked,
                                     buildingName,
@@ -570,13 +495,13 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                               height: 400,
                               color: const Color.fromARGB(255, 255, 255, 255),
                               child: CustomPaint(
-                                painter: PointsPainter(
+                                painter: MapPainter(
                                     xposition,
                                     yposition,
                                     scale,
                                     roomsOnFloor,
                                     buildingBoundaries,
-                                    centering,
+                                    mapOrigin,
                                     getPathAndSize,
                                     roomClicked,
                                     buildingName,
@@ -584,12 +509,8 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                               ),
                             ),
                           ),
-                          MemberDetails(
-                              eventDetailsOptimized,
-                              roomClicked,
-                              floorName,
-                              buildingName,
-                              attendeesList),
+                          EventDetails(eventDetailsOptimized, roomClicked,
+                              floorName, buildingName, attendeesList),
                         ]);
                       },
                     );
@@ -601,7 +522,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
   }
 }
 
-class PointsPainter extends CustomPainter {
+class MapPainter extends CustomPainter {
   final int xposition;
   final int yposition;
   final double scale;
@@ -645,7 +566,7 @@ class PointsPainter extends CustomPainter {
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.fill;
 
-  PointsPainter(
+  MapPainter(
       this.xposition,
       this.yposition,
       this.scale,
@@ -802,7 +723,7 @@ class PointsPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant PointsPainter oldDelegate) {
+  bool shouldRepaint(covariant MapPainter oldDelegate) {
     return oldDelegate.xposition != xposition ||
         oldDelegate.yposition != yposition ||
         oldDelegate.scale != scale ||
@@ -811,7 +732,7 @@ class PointsPainter extends CustomPainter {
   }
 }
 
-class MemberDetails extends StatelessWidget {
+class EventDetails extends StatelessWidget {
   List<ListTile> eventDetailTiles = <ListTile>[];
 
   Map<String, Map<String, dynamic>> eventDetailsOptimized = {};
@@ -825,7 +746,8 @@ class MemberDetails extends StatelessWidget {
       List<Map<String, dynamic>> attendeesList, String location) {
     List<Map<String, dynamic>> attendeesInRoom = [];
     for (Map<String, dynamic> attendee in attendeesList) {
-      if (attendee['rfid_location'] == location && attendee['in_room'] == true) {
+      if (attendee['rfid_location'] == location &&
+          attendee['in_room'] == true) {
         attendeesInRoom.add(attendee);
         numberOfAttendees++;
       }
@@ -834,45 +756,43 @@ class MemberDetails extends StatelessWidget {
     return attendeesInRoom;
   }
 
-  MemberDetails(
-      this.eventDetailsOptimized,
-      this.roomClicked,
-      this.floorName,
-      this.buildingName,
-      this.attendeesList) {
+  EventDetails(this.eventDetailsOptimized, this.roomClicked, this.floorName,
+      this.buildingName, this.attendeesList) {
     if (eventDetailsOptimized[roomClicked] == null) {
       eventDetailTiles.add(const ListTile(
         dense: true,
         title: Text("No events"),
         minTileHeight: 0,
       ));
-    }
-    else
-    {
+    } else {
       eventDetailTiles.add(ListTile(
-      dense: true,
-      title: Text(
-        "Event Name : " + eventDetailsOptimized[roomClicked]!['name'].toString(),
-        style: TextStyle(fontSize: 12),
-      ),
-      minTileHeight: 0,
-    ));
+        dense: true,
+        title: Text(
+          "Event Name : " +
+              eventDetailsOptimized[roomClicked]!['name'].toString(),
+          style: TextStyle(fontSize: 12),
+        ),
+        minTileHeight: 0,
+      ));
     }
 
-      String location = "$buildingName/$floorName/$roomClicked";
-      List<Map<String, dynamic>> attendeesInRoom =
-          getAttendeesInRoom(attendeesList, location);
+    String location = "$buildingName/$floorName/$roomClicked";
+    List<Map<String, dynamic>> attendeesInRoom =
+        getAttendeesInRoom(attendeesList, location);
 
     eventDetailTiles.add(ListTile(
-        dense: true, title: Text("Number of Attendees : $numberOfAttendees"), minTileHeight: 0,));
+      dense: true,
+      title: Text("Number of Attendees : $numberOfAttendees"),
+      minTileHeight: 0,
+    ));
 
     for (Map<String, dynamic> attendee in attendeesInRoom) {
-        eventDetailTiles.add(ListTile(
-          dense: true,
-          title: Text(attendee['name']),
-          minTileHeight: 0,
-        ));
-      }
+      eventDetailTiles.add(ListTile(
+        dense: true,
+        title: Text(attendee['name']),
+        minTileHeight: 0,
+      ));
+    }
   }
 
   @override
