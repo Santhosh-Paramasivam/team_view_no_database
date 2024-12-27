@@ -54,3 +54,10 @@ string_encoding/
 
 # uids
 uids/
+
+# incompatible platforms for the project
+
+windows/
+macos/
+linux/
+web/
