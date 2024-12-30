@@ -19,12 +19,11 @@ class CustomDropdownButton extends StatelessWidget {
     return Container(
       alignment: AlignmentDirectional.centerEnd,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(4), // Rounded corners
+        borderRadius: BorderRadius.circular(4), 
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           padding: padding,
-          //isExpanded: true,
           alignment: AlignmentDirectional.centerEnd,
           value: value,
           hint: const Text("Person", style: TextStyle(color: Colors.grey)),

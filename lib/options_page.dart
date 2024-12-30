@@ -7,6 +7,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'custom_logger.dart';
 import 'package:logger/logger.dart';
 
+// To remove
+import 'drawer.dart';
+
 class AppOptions extends StatelessWidget {
   AppOptions({super.key});
 
@@ -41,6 +44,12 @@ class AppOptions extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                     builder: (context) => const LocationSetPage()));
+          }),
+          MenuButton("Drawer Page", (context) {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => CampusFindDrawerPage()));
           }),
         ]));
   }

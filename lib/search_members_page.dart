@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
-import 'member_location_map.dart';
+import 'display_location_map.dart';
 import 'search_members_bar.dart';
 import 'firebase_connections/singleton_firestore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

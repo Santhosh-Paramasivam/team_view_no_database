@@ -1,59 +1,65 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+
 import 'options_page.dart';
-import 'firebase_connections/singleton_auth.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'firebase_connections/singleton_firestore.dart';
+import 'firebase_connections/singleton_auth.dart';
+
 import 'session_data/session_details.dart';
 import 'session_data/building_details.dart';
 
+import 'custom_widgets/cf_button.dart';
+import 'custom_widgets/cf_input.dart';
 
-// ignore_for_file: must_be_immutable
-class Login extends StatelessWidget {
-  Login({super.key});
+import 'package:logger/logger.dart';
+import 'custom_logger.dart';
 
-  TextEditingController emailInputController = TextEditingController();
-  TextEditingController passwordInputController = TextEditingController();
+class LoginPage extends StatelessWidget {
+  LoginPage({super.key});
+
+  final TextEditingController _emailInputController = TextEditingController();
+  final TextEditingController _passwordInputController =
+      TextEditingController();
   final FirebaseAuth _auth = AuthenticationService().firebaseAuth;
   final FirebaseFirestore _firestore = FirestoreService().firestore;
 
-  void showEnteredDetails()
-  {
-    print(emailInputController.text);
-    print(passwordInputController.text);
+  final Logger logger = Logger(printer: CustomPrinter("LoginPage"));
+
+  void showEnteredDetails() {
+    logger.i("Email Address : ${_emailInputController.text}");
+    logger.i("Password : ${_passwordInputController.text}");
   }
 
   Future<void> loadBuildingFloorNames(String institutionID) async {
-
     try {
       List<String> buildings = [];
       List<String> floors = [];
 
-      QuerySnapshot institutionSnapshot = await FirestoreService().firestore
+      QuerySnapshot institutionSnapshot = await _firestore
           .collection('institution_buildings')
-          .where('institution_id',isEqualTo: institutionID)
+          .where('institution_id', isEqualTo: institutionID)
           .get();
 
-      for(QueryDocumentSnapshot doc in institutionSnapshot.docs)
-      {
+      for (QueryDocumentSnapshot doc in institutionSnapshot.docs) {
         String institutionDocName = doc.id;
         //print("docname : " + institutionDocName);
 
-        QuerySnapshot buildingSnapshot = await FirestoreService().firestore
-          .collection('institution_buildings')
-          .doc(institutionDocName)
-          .collection('buildings')
-          .get();
+        QuerySnapshot buildingSnapshot = await _firestore
+            .collection('institution_buildings')
+            .doc(institutionDocName)
+            .collection('buildings')
+            .get();
 
-        for(QueryDocumentSnapshot doc in buildingSnapshot.docs)
-        {
-            String buildingDocName = doc.id;
-            Map <String,dynamic> building = doc.data() as Map<String,dynamic>;
-            //print('building_name : ' + building['building_name']);
-            buildings.add(building['building_name']);
+        for (QueryDocumentSnapshot doc in buildingSnapshot.docs) {
+          String buildingDocName = doc.id;
+          Map<String, dynamic> building = doc.data() as Map<String, dynamic>;
+          //print('building_name : ' + building['building_name']);
+          buildings.add(building['building_name']);
 
-            QuerySnapshot floors_snapshot = await FirestoreService().firestore
+          QuerySnapshot floors_snapshot = await _firestore
               .collection('institution_buildings')
               .doc(institutionDocName)
               .collection('buildings')
@@ -61,50 +67,47 @@ class Login extends StatelessWidget {
               .collection('floors')
               .get();
 
-            for(QueryDocumentSnapshot doc in floors_snapshot.docs)
-            {
-              Map <String,dynamic> floor = doc.data() as Map<String,dynamic>;
-              //print('floor_name : ' + floor['floor_name']);
-              floors.add(floor['floor_name']);
-            }
+          for (QueryDocumentSnapshot doc in floors_snapshot.docs) {
+            Map<String, dynamic> floor = doc.data() as Map<String, dynamic>;
+            //print('floor_name : ' + floor['floor_name']);
+            floors.add(floor['floor_name']);
+          }
         }
       }
 
       BuildingDetails.buildings = buildings;
       BuildingDetails.floors = floors;
-
     } catch (error) {
-
       print('Error fetching data: $error');
     }
   }
 
-
   Future<void> signIn() async {
     try {
       await _auth.signInWithEmailAndPassword(
-        email: emailInputController.text,
-        password: passwordInputController.text,
+        email: _emailInputController.text,
+        password: _passwordInputController.text,
       );
       print(_auth.currentUser?.uid);
 
       String currentUserID = _auth.currentUser!.uid;
       print(currentUserID);
-      
-      QuerySnapshot snapshot1 = await FirestoreService().firestore.collection("institution_members")
-                                        .where("id",isEqualTo: currentUserID)
-                                        .limit(1)
-                                        .get();
 
-      for(QueryDocumentSnapshot doc in snapshot1.docs)
-      {
-        Map<String, dynamic> member = doc.data() as Map<String,dynamic>;
+      QuerySnapshot snapshot1 = await FirestoreService()
+          .firestore
+          .collection("institution_members")
+          .where("id", isEqualTo: currentUserID)
+          .limit(1)
+          .get();
+
+      for (QueryDocumentSnapshot doc in snapshot1.docs) {
+        Map<String, dynamic> member = doc.data() as Map<String, dynamic>;
         SessionDetails.email = member['email_id'];
         SessionDetails.id = _auth.currentUser!.uid;
         SessionDetails.institution_id = member['institution_id'];
         SessionDetails.name = member['name'];
       }
-      
+
       print('before loading');
       await loadBuildingFloorNames(SessionDetails.institution_id);
       print('User signed in');
@@ -115,536 +118,39 @@ class Login extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        extendBody: true,
-        extendBodyBehindAppBar: true,
-        body: Container(
-          width: double.maxFinite,
-          height: MediaQuery.of(context).size.height,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment(0.5, 0),
-              end: Alignment(0.5, 1),
-              colors: [Color(0XFF66D2CC), Color(0XFF3062F3)],
-            ),
-          ),
-          child: SizedBox(
-            width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: Container(
-                width: double.maxFinite,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 62),
-                    Container(
-                      width: double.maxFinite,
-                      margin: const EdgeInsets.only(
-                        left: 8,
-                        right: 20,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Align(
-                            alignment: Alignment.center,
-                            child: Text(
-                              "TeamView",
-                              style: TextStyle(
-                                color: Color(0XFFFFFFFF),
-                                fontSize: 40,
-                                fontFamily: 'Arimo',
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 96),
-                          const Text(
-                            "Login Account",
-                            style: TextStyle(
-                              color: Color(0XFF130C0C),
-                              fontSize: 24,
-                              fontFamily: 'Arimo',
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 18),
-                          const Text(
-                            "Hello, you must login first to be able to use the application and enjoy all the features in TeamView",
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Color(0XFF120404),
-                              fontSize: 14,
-                              fontFamily: 'Arimo',
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          const SizedBox(height: 50),
-                          _buildLoginForm(context)
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 52),
-                    _buildLoginButton(context),
-                    const SizedBox(height: 34),
-                    _buildAlternativeSigninOptions(context)
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Section Widget
-  Widget _buildEmailInput(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: TextFormField(
-        focusNode: FocusNode(),
-        autofocus: true,
-        controller: emailInputController,
-        style: const TextStyle(
-          color: Color(0X7F000000),
-          fontSize: 17.44186019897461,
-          fontFamily: 'Work Sans',
-          fontWeight: FontWeight.w400,
-        ),
-        decoration: InputDecoration(
-          hintText: "Email Address",
-          hintStyle: const TextStyle(
-            color: Color(0X7F000000),
-            fontSize: 17.44186019897461,
-            fontFamily: 'Work Sans',
-            fontWeight: FontWeight.w400,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
-            borderSide: BorderSide.none,
-          ),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
-            borderSide: BorderSide.none,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
-            borderSide: BorderSide.none,
-          ),
-          prefixIcon: Container(
-            margin: const EdgeInsets.fromLTRB(16, 16, 8, 16),
-            child: SvgPicture.asset(
-              "assets/images/img_mailfill0wght400grad0opsz48_1_1.svg",
-              height: 18,
-              width: 20,
-            ),
-          ),
-          prefixIconConstraints: const BoxConstraints(
-            maxHeight: 52,
-          ),
-          filled: true,
-          fillColor: const Color(0XFFFFFFFF),
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Section Widget
-  Widget _buildPasswordInput(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: TextFormField(
-        focusNode: FocusNode(),
-        autofocus: true,
-        controller: passwordInputController,
-        style: const TextStyle(
-          color: Color(0X7F000000),
-          fontSize: 17.44186019897461,
-          fontFamily: 'Work Sans',
-          fontWeight: FontWeight.w400,
-        ),
-        textInputAction: TextInputAction.done,
-        obscureText: true,
-        decoration: InputDecoration(
-          hintText: "Password",
-          hintStyle: const TextStyle(
-            color: Color(0X7F000000),
-            fontSize: 17.44186019897461,
-            fontFamily: 'Work Sans',
-            fontWeight: FontWeight.w400,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
-            borderSide: BorderSide.none,
-          ),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
-            borderSide: BorderSide.none,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(
-              8,
-            ),
-            borderSide: BorderSide.none,
-          ),
-          prefixIcon: Container(
-            margin: const EdgeInsets.fromLTRB(16, 16, 8, 16),
-            child: SvgPicture.asset(
-              "assets/images/img_lockfill0wght400grad0opsz48_1.svg",
-              height: 18,
-              width: 20,
-            ),
-          ),
-          prefixIconConstraints: const BoxConstraints(
-            maxHeight: 52,
-          ),
-          suffixIcon: Container(
-            margin: const EdgeInsets.all(16),
-            child: SvgPicture.asset(
-              "assets/images/img_vector.svg",
-              height: 18,
-              width: 20,
-            ),
-          ),
-          suffixIconConstraints: const BoxConstraints(
-            maxHeight: 52,
-          ),
-          filled: true,
-          fillColor: const Color(0XFFFFFFFF),
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Section Widget
-  Widget _buildLoginForm(BuildContext context) {
-    return SizedBox(
-      width: double.maxFinite,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildEmailInput(context),
-          const SizedBox(height: 14),
-          _buildPasswordInput(context),
-          const SizedBox(height: 14),
-          const Padding(
-            padding: EdgeInsets.only(left: 6),
-            child: Text(
-              "Forgot password?",
-              style: TextStyle(
-                color: Color(0XFF000000),
-                fontSize: 13.95348834991455,
-                fontFamily: 'Work Sans',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  /// Section Widget
-  Widget _buildLoginButton(BuildContext context) {
-    return Container(
-      width: double.maxFinite,
-      height: 58,
-      margin: const EdgeInsets.only(left: 4),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: const Color(0XFF5E9EE8),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              10,
-            ),
-          ),
-          visualDensity: const VisualDensity(
-            vertical: -4,
-            horizontal: -4,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 30,
-            vertical: 18,
-          ),
-        ),
-        onPressed: () async
-        {
-          await signIn();
-          showEnteredDetails();
-          Navigator.push
-          (
-            context,
-            MaterialPageRoute(builder: (context) => AppOptions())
-          );
-        },
-        child: const Text(
-          "Log in",
-          style: TextStyle(
-            color: Color(0XFFFFFFFF),
-            fontSize: 16,
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGoogleSigninButton(BuildContext context) {
-    return Container(
-      width: double.maxFinite,
-      height: 44,
-      margin: const EdgeInsets.only(
-        left: 70,
-        right: 64,
-      ),
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          backgroundColor: const Color(0XFFFFFFFF),
-          side: const BorderSide(
-            color: Color(0XFFD8DADC),
-            width: 1.0,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              10,
-            ),
-          ),
-          visualDensity: const VisualDensity(
-            vertical: -4,
-            horizontal: -4,
-          ),
-          padding: const EdgeInsets.only(
-            top: 12,
-            right: 6,
-            bottom: 12,
-          ),
-        ),
-        onPressed: () {},
-        child: Row(
+    return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+            child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(
-                  8,
-                ),
-              ),
-              child: SvgPicture.asset(
-                "assets/images/img_google_logo.svg",
-                height: 18,
-                width: 18,
-              ),
+            const Image(
+              image: AssetImage('assets/images/CampusFindLogo.png'),
+              width: 200,
             ),
-            const Text(
-              "Sign in with Google",
-              style: TextStyle(
-                color: Color(0XFF000000),
-                fontSize: 16,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-              ),
-            )
+            const SizedBox(height: 60),
+            CampusFindInput(
+              width: 300,
+              controller: _emailInputController,
+              labelText: "Email Address",
+            ),
+            CampusFindInput(
+              width: 300,
+              controller: _passwordInputController,
+              obscureText: true,
+              labelText: "Password",
+            ),
+            const SizedBox(height: 20),
+            CampusFindButton(
+                label: "Login",
+                onPressed: () async {
+                  await signIn();
+                  showEnteredDetails();
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => AppOptions()));
+                })
           ],
-        ),
-      ),
-    );
-  }
-
-  /// Section Widget
-  Widget _buildAppleSigninButton(BuildContext context) {
-    return Container(
-      width: double.maxFinite,
-      height: 42,
-      margin: const EdgeInsets.only(
-        left: 70,
-        right: 64,
-      ),
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          backgroundColor: const Color(0XFFFFFFFF),
-          side: const BorderSide(
-            color: Color(0XFFD8DADC),
-            width: 1.0,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              10,
-            ),
-          ),
-          visualDensity: const VisualDensity(
-            vertical: -4,
-            horizontal: -4,
-          ),
-          padding: const EdgeInsets.only(
-            top: 10,
-            right: 10,
-            bottom: 10,
-          ),
-        ),
-        onPressed: () {},
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(right: 12),
-              child: SvgPicture.asset(
-                "assets/images/img_social_icon_apple.svg",
-                height: 20,
-                width: 20,
-              ),
-            ),
-            const Text(
-              "Sign in with Apple",
-              style: TextStyle(
-                color: Color(0XFF000000),
-                fontSize: 16,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Section Widget
-  Widget _buildAlternativeSigninOptions(BuildContext context) {
-    return Container(
-      width: double.maxFinite,
-      margin: const EdgeInsets.only(
-        left: 8,
-        right: 20,
-      ),
-      child: Column(
-        children: [
-          const SizedBox(
-            width: double.maxFinite,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 6),
-                    child: Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: Color(0XFFF2F2F2),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    "Or Sign In With",
-                    style: TextStyle(
-                      color: Color(0XFF250505),
-                      fontSize: 12,
-                      fontFamily: 'Arimo',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 6),
-                    child: Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: Color(0XFFF2F2F2),
-                    ),
-                  ),
-                )
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          _buildGoogleSigninButton(context),
-          const SizedBox(height: 14),
-          _buildAppleSigninButton(context),
-          const SizedBox(height: 14),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 46),
-              child: RichText(
-                text: const TextSpan(
-                  children: [
-                    TextSpan(
-                      text: "Don’t have an account?",
-                      style: TextStyle(
-                        color: Color(0XB2000000),
-                        fontSize: 14,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    TextSpan(
-                      text: " ",
-                    ),
-                    TextSpan(
-                      text: "Sign up",
-                      style: TextStyle(
-                        color: Color(0XFF000000),
-                        fontSize: 14,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    )
-                  ],
-                ),
-                textAlign: TextAlign.left,
-              ),
-            ),
-          )
-        ],
-      ),
-    );
+        )));
   }
 }
