@@ -49,8 +49,8 @@ class MemberSearchBarState extends State<MemberSearchBar> {
   AppBar build(BuildContext context) {
     return AppBar(
       title: Text(searchBarLabel),
-      backgroundColor: Colors.blue,
-      foregroundColor: Colors.white,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
       actions: [
         IconButton(
           onPressed: () {

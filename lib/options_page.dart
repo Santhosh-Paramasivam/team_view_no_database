@@ -32,8 +32,7 @@ class AppOptions extends StatelessWidget {
         ),
         body: Column(children: [
           MenuButton("Search members and venues", (context) {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const SearchPage()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchPage()));
           }),
           MenuButton("Log Out", (context) {
             signOut();
@@ -41,16 +40,12 @@ class AppOptions extends StatelessWidget {
           }),
           MenuButton("Set Location", (context) {
             Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const LocationSetPage()));
+                context, MaterialPageRoute(builder: (context) => const LocationSetPage()));
           }),
-          MenuButton("Drawer Page", (context) {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => CampusFindDrawerPage()));
-          }),
+          // MenuButton("Drawer Page", (context) {
+          //   Navigator.push(
+          //       context, MaterialPageRoute(builder: (context) => CampusFindDrawerPage()));
+          // }),
         ]));
   }
 }
@@ -68,8 +63,7 @@ class MenuButton extends StatelessWidget {
       height: 60,
       child: TextButton(
           style: const ButtonStyle(
-              shape: WidgetStatePropertyAll<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
+              shape: WidgetStatePropertyAll<RoundedRectangleBorder>(RoundedRectangleBorder(
             borderRadius: BorderRadius.zero,
           ))),
           onPressed: () => this.onPressed(context),

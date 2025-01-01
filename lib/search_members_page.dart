@@ -10,6 +10,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'session_data/session_details.dart';
 
+import 'drawer.dart';
+
 class Member {
   String name;
   String rfidLocation;
@@ -22,8 +24,8 @@ class Member {
   String memberID;
   String status;
 
-  Member(this.name, this.rfidLocation, this.institutionID, this.id, this.role,
-      this.memberID, this.status) {
+  Member(this.name, this.rfidLocation, this.institutionID, this.id, this.role, this.memberID,
+      this.status) {
     List<String> rfidLocationList = rfidLocation.split("/");
     building = rfidLocationList[0];
     floor = rfidLocationList[1];
@@ -59,8 +61,7 @@ class _SearchPageState extends State<SearchPage> {
 
   final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget =
       GlobalKey<MapDetailsDisplayWidgetState>();
-  final GlobalKey<MemberSearchBarState> _memberSearchBar =
-      GlobalKey<MemberSearchBarState>();
+  final GlobalKey<MemberSearchBarState> _memberSearchBar = GlobalKey<MemberSearchBarState>();
 
   Map<String, dynamic> prevPersonDetails = Map<String, dynamic>();
 
@@ -68,8 +69,8 @@ class _SearchPageState extends State<SearchPage> {
   initState() {
     super.initState();
     selectedInputType = "Person";
-    memberForMemberDetails = Member("Default", "SRMIST/GroundFloor/Room1", "",
-        "", "Default Role", "Default ID", "Default Status");
+    memberForMemberDetails = Member("Default", "SRMIST/GroundFloor/Room1", "", "", "Default Role",
+        "Default ID", "Default Status");
     doDisplayMemberDetails = true;
     appUserInstitutionID = SessionDetails.institution_id;
     //name = "Santhosh Paramasivam";
@@ -103,9 +104,8 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: 
-        MemberSearchBar(
-            _memberSearchBar, displayMemberNew, displayMemberDetails),
+        appBar: MemberSearchBar(_memberSearchBar, displayMemberNew, displayMemberDetails),
+        drawer: CampusFindDrawer(),
         body: SizedBox(
             width: double.infinity,
             height: double.infinity,
@@ -130,8 +130,7 @@ class _SearchPageState extends State<SearchPage> {
                     }
 
                     var doc = snapshot.data!.docs.first;
-                    Map<String, dynamic> personDetails =
-                        doc.data() as Map<String, dynamic>;
+                    Map<String, dynamic> personDetails = doc.data() as Map<String, dynamic>;
 
                     final eq = const DeepCollectionEquality().equals;
 
@@ -141,19 +140,15 @@ class _SearchPageState extends State<SearchPage> {
                       doDisplayMemberDetails = true;
                       memberForMemberDetails.name = personDetails['name'];
                       memberForMemberDetails.id = personDetails['id'];
-                      memberForMemberDetails
-                          .changeRFIDLocation(personDetails['rfid_location']);
-                      memberForMemberDetails.institutionID =
-                          appUserInstitutionID;
+                      memberForMemberDetails.changeRFIDLocation(personDetails['rfid_location']);
+                      memberForMemberDetails.institutionID = appUserInstitutionID;
                       memberForMemberDetails.role = personDetails['user_role'];
                       memberForMemberDetails.status = personDetails['status'];
 
                       if (memberForMemberDetails.role == "Professor") {
-                        memberForMemberDetails.memberID =
-                            personDetails['faculty_id'];
+                        memberForMemberDetails.memberID = personDetails['faculty_id'];
                       } else if (memberForMemberDetails.role == "Student") {
-                        memberForMemberDetails.memberID =
-                            personDetails['register_id'];
+                        memberForMemberDetails.memberID = personDetails['register_id'];
                       }
                       prevPersonDetails = Map.from(personDetails);
                     }
@@ -198,10 +193,8 @@ class MemberDetails extends StatelessWidget {
           //Text("ID: " + member.id.toString()),
           if (member.name != "Default") Text("Name: ${member.name}"),
           if (member.name != "Default") Text("Role: ${member.role}"),
-          if (member.role == "Professor")
-            Text("Faculty ID: ${member.memberID}"),
-          if (member.role == "Student")
-            Text("Register Number: ${member.memberID}"),
+          if (member.role == "Professor") Text("Faculty ID: ${member.memberID}"),
+          if (member.role == "Student") Text("Register Number: ${member.memberID}"),
           if (member.name != "Default") Text("Status: ${member.status}"),
           //if(member.name != "Default") Text("Location: ${member.building} / ${member.floor} / ${member.room}")
         ],

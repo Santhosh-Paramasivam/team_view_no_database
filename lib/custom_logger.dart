@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 
 class CustomPrinter extends LogPrinter {
-
   String loggingClass;
   CustomPrinter(this.loggingClass);
 
   @override
-  List<String> log(LogEvent event,) {
+  List<String> log(
+    LogEvent event,
+  ) {
     final color = _getColorForLevel(event.level);
     final logMessage =
         "[${event.level.name.toUpperCase()}] [$loggingClass] ${event.message}";
@@ -19,6 +20,8 @@ class CustomPrinter extends LogPrinter {
 
   String Function(String) _getColorForLevel(Level level) {
     switch (level) {
+      case Level.trace:
+        return (message) => '\x1B[32m$message\x1B[0m'; // Green
       case Level.debug:
         return (message) => '\x1B[34m$message\x1B[0m'; // Blue
       case Level.info:
@@ -26,6 +29,8 @@ class CustomPrinter extends LogPrinter {
       case Level.warning:
         return (message) => '\x1B[33m$message\x1B[0m'; // Yellow
       case Level.error:
+        return (message) => '\x1B[38;5;214m$message\x1B[0m'; // Orange
+      case Level.fatal:
         return (message) => '\x1B[31m$message\x1B[0m'; // Red
       default:
         return (message) => message;

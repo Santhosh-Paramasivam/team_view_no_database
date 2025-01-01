@@ -8,8 +8,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'session_data/session_details.dart';
 
-class Member
-{
+import 'package:logger/logger.dart';
+import 'custom_logger.dart';
+
+class Member {
   String name;
   String rfidLocation;
   String institutionID;
@@ -22,19 +24,18 @@ class Member
   String status;
   //int buildingID;
 
-  Member(this.name, this.rfidLocation, this.institutionID, this.id, this.role, this.memberID, this.status)
-  {
+  Member(this.name, this.rfidLocation, this.institutionID, this.id, this.role, this.memberID,
+      this.status) {
     List<String> rfidLocationList = rfidLocation.split("/");
     building = rfidLocationList[0];
     floor = rfidLocationList[1];
     room = rfidLocationList[2];
   }
 
-  void changeRFIDLocation(String newRFIDLocation)
-  {
+  void changeRFIDLocation(String newRFIDLocation) {
     rfidLocation = newRFIDLocation;
     List<String> rfidLocationList = rfidLocation.split("/");
-    building= rfidLocationList[0];
+    building = rfidLocationList[0];
     floor = rfidLocationList[1];
     room = rfidLocationList[2];
   }
@@ -45,22 +46,19 @@ class Room {
   String roomName;
   late Offset roomCenter;
 
-  Room(this.roomVertices, this.roomName)
-  {
+  Room(this.roomVertices, this.roomName) {
     double sumdX = 0;
     double sumdY = 0;
-    for(Offset roomVertex in roomVertices)
-    {
+    for (Offset roomVertex in roomVertices) {
       sumdX += roomVertex.dx;
       sumdY += roomVertex.dy;
     }
 
-    this.roomCenter = Offset(sumdX/roomVertices.length, sumdY/roomVertices.length);
+    this.roomCenter = Offset(sumdX / roomVertices.length, sumdY / roomVertices.length);
   }
 }
 
 class MapDetailsDisplayWidget extends StatefulWidget {
-
   const MapDetailsDisplayWidget({super.key});
 
   @override
@@ -70,7 +68,7 @@ class MapDetailsDisplayWidget extends StatefulWidget {
 class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   late int xposition;
   late int yposition;
-  late double scale; 
+  late double scale;
 
   late Member memberSearched;
 
@@ -81,8 +79,8 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   Map<String, dynamic>? jsonData;
   List<Room> roomsOnFloor = <Room>[];
   List<Offset> buildingBoundaries = <Offset>[];
-  late Offset centering = const Offset(0,0);
-  late Offset previousOffset; 
+  late Offset centering = const Offset(0, 0);
+  late Offset previousOffset;
   late double initialScale; // To keep track of the previous drag position
   late Size drawingWindowSize;
 
@@ -91,13 +89,14 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   late Path path;
   late List<Path> roomPaths = <Path>[];
 
-  Map<String,dynamic> prevPersonDetails = Map<String,dynamic>();
+  Map<String, dynamic> prevPersonDetails = Map<String, dynamic>();
 
+  Logger logger = Logger(printer: CustomPrinter("MapDetailsDisplayWidgetState"));
   @override
   void initState() {
     super.initState();
 
-    memberSearched = Member("Default", "A/B/C", "", "9", "Default Role","Default ID","Status ID");
+    memberSearched = Member("Default", "SRMIST/FirstFloor/Room2", "", "9", "Default Role", "Default ID", "Status ID");
 
     xposition = 0;
     yposition = 0;
@@ -110,20 +109,21 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
 
     mapLoadingUp = true;
     loadFloors();
+    mapLoadingUp = false;
   }
 
-    void refreshName(name) {
+  void refreshName(name) {
     setState(() {
       personName = name;
       xposition = 0;
       yposition = 0;
-      scale = 0.6; 
+      scale = 0.6;
 
       mapLoadingUp = true;
       loadFloors();
+      mapLoadingUp = false;
     });
   }
-
 
   Stream<QuerySnapshot> fetchUsersStream() {
     return FirestoreService()
@@ -136,29 +136,29 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   }
 
   Future<void> loadFloors() async {
+    roomsOnFloor.clear();
 
-      roomsOnFloor.clear();
-  
-      Map <String,dynamic> institution = {};
-      String institutionDocName = '';
-      String buildingDocName = '';
-      Map <String,dynamic> building = {};
-      List<List<int>> building_boundaries = []; 
-      late Map <String,dynamic> floor = {};
+    Map<String, dynamic> institution = {};
+    String institutionDocName = '';
+    String buildingDocName = '';
+    Map<String, dynamic> building = {};
+    List<List<int>> building_boundaries = [];
+    late Map<String, dynamic> floor = {};
 
-      QuerySnapshot snapshot = await FirestoreService().firestore
-          .collection('institution_buildings')
-          .where('institution_id', isEqualTo: appUserInstitutionID)
-          .limit(1)
-          .get();
+    QuerySnapshot snapshot = await FirestoreService()
+        .firestore
+        .collection('institution_buildings')
+        .where('institution_id', isEqualTo: appUserInstitutionID)
+        .limit(1)
+        .get();
 
-      for(QueryDocumentSnapshot doc in snapshot.docs)
-      {
-        institutionDocName = doc.id;
-        institution = doc.data() as Map<String,dynamic>;
-      }
+    for (QueryDocumentSnapshot doc in snapshot.docs) {
+      institutionDocName = doc.id;
+      institution = doc.data() as Map<String, dynamic>;
+    }
 
-      QuerySnapshot snapshot1 = await FirestoreService().firestore
+    QuerySnapshot snapshot1 = await FirestoreService()
+        .firestore
         .collection('institution_buildings')
         .doc(institutionDocName)
         .collection('buildings')
@@ -166,23 +166,25 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
         .limit(1)
         .get();
 
-      for(QueryDocumentSnapshot doc in snapshot1.docs)
-      {
-        buildingDocName = doc.id;
-        building = doc.data() as Map<String,dynamic>;
-      }
+    for (QueryDocumentSnapshot doc in snapshot1.docs) {
+      buildingDocName = doc.id;
+      building = doc.data() as Map<String, dynamic>;
+    }
 
-      building_boundaries = jsonDecode(building['building_boundaries'])
-      .map<List<int>>((item) => List<int>.from(item))
-      .toList();
+    logger.d("institutionDocName : ${institutionDocName}");
+    logger.d("memberSearched building : ${memberSearched.building}");
+    logger.d("building_boundaries : ${building}");
+    building_boundaries = jsonDecode(building['building_boundaries'])
+        .map<List<int>>((item) => List<int>.from(item))
+        .toList();
 
-      for(List<int> point in building_boundaries)
-      {
-        buildingBoundaries.add(Offset(point[0].toDouble(),point[1].toDouble()));
-        //print(Offset(point[0].toDouble(),point[1].toDouble()));
-      }
+    for (List<int> point in building_boundaries) {
+      buildingBoundaries.add(Offset(point[0].toDouble(), point[1].toDouble()));
+      //print(Offset(point[0].toDouble(),point[1].toDouble()));
+    }
 
-      QuerySnapshot snapshot2 = await FirestoreService().firestore
+    QuerySnapshot snapshot2 = await FirestoreService()
+        .firestore
         .collection('institution_buildings')
         .doc(institutionDocName)
         .collection('buildings')
@@ -192,31 +194,27 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
         .limit(1)
         .get();
 
-      for(QueryDocumentSnapshot doc in snapshot2.docs)
-      {
-        //buildingDocName = doc.id;
-        floor = doc.data() as Map<String,dynamic>;
-        floor = json.decode(floor['rooms_on_floor']) as Map<String,dynamic>;
-      }
+    for (QueryDocumentSnapshot doc in snapshot2.docs) {
+      //buildingDocName = doc.id;
+      floor = doc.data() as Map<String, dynamic>;
+      floor = json.decode(floor['rooms_on_floor']) as Map<String, dynamic>;
+    }
 
-    setState((){
+    setState(() {
       floor.forEach((key, value) {
+        List<Offset> points = (value as List).map<Offset>((item) {
+          double x = item[0].toDouble();
+          double y = item[1].toDouble();
+          return Offset(x, y);
+        }).toList();
 
-          List<Offset> points = (value as List).map<Offset>((item) {
-            double x = item[0].toDouble();
-            double y = item[1].toDouble();
-            return Offset(x, y);
-          }).toList();
+        roomsOnFloor.add(Room(points, key));
+      });
 
-          roomsOnFloor.add(Room(points, key));
-        });
-
-      for(Room room in roomsOnFloor)
-        {
-          if(room.roomName == memberSearched.room)
-          {
-            centering = room.roomCenter;
-          }
+      for (Room room in roomsOnFloor) {
+        if (room.roomName == memberSearched.room) {
+          centering = room.roomCenter;
+        }
       }
 
       mapLoadingUp = false;
@@ -258,16 +256,15 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
       scale -= 0.3;
     });
   }
-  
-  void getPathAndSize(List<Path> roomPaths, Size size)
-  {
+
+  void getPathAndSize(List<Path> roomPaths, Size size) {
     this.drawingWindowSize = size;
     this.roomPaths = roomPaths;
   }
 
-  Offset scaler(Offset unscaledPoint)
-  {
-    return Offset(unscaledPoint.dx - (drawingWindowSize.width/2 - scale*(centering.dx)),unscaledPoint.dy - (drawingWindowSize.height/2 - scale*(centering.dy)));
+  Offset scaler(Offset unscaledPoint) {
+    return Offset(unscaledPoint.dx - (drawingWindowSize.width / 2 - scale * (centering.dx)),
+        unscaledPoint.dy - (drawingWindowSize.height / 2 - scale * (centering.dy)));
   }
 
   void _onScaleStart(ScaleStartDetails details) {
@@ -276,95 +273,98 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   }
 
   void _onScaleUpdate(ScaleUpdateDetails details) {
-    if ((details.scale - scale).abs() > 0.01 || (details.focalPoint - previousOffset).distance > 5) {
+    if ((details.scale - scale).abs() > 0.01 ||
+        (details.focalPoint - previousOffset).distance > 5) {
       setState(() {
         scale = initialScale * details.scale;
-        xposition -= ((1/scale) * (details.focalPoint.dx - previousOffset.dx)).toInt();
-        yposition -= ((1/scale) * (details.focalPoint.dy - previousOffset.dy)).toInt();
+        xposition -= ((1 / scale) * (details.focalPoint.dx - previousOffset.dx)).toInt();
+        yposition -= ((1 / scale) * (details.focalPoint.dy - previousOffset.dy)).toInt();
         previousOffset = details.focalPoint;
       });
     }
   }
- 
+
   @override
   Widget build(BuildContext context) {
     return Container(
-          child: Column(children: [
-            Row(children: [
-              TextButton(onPressed: this.moveLeft, child: const Text("<")),
-              TextButton(onPressed: this.moveRight, child: const Text(">")),
-              TextButton(onPressed: this.moveUp, child: const Text("^")),
-              TextButton(onPressed: this.moveDown, child: const Text("v")),
-              TextButton(onPressed: this.zoomIn, child: const Text("+")),
-              TextButton(onPressed: this.zoomOut, child: const Text("-")),
-            ]),
-            StreamBuilder<QuerySnapshot>(
-              stream: fetchUsersStream(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                      return Container(
-                    width: double.infinity,
-                    height: 500,
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    child: Text("Error fetching data"));
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Container(
-                width: double.infinity,
-                height: 500,
-                color: const Color.fromARGB(255, 255, 255, 255),
-                child: Text("No user found"));
-                }
+      child: Column(children: [
+        Row(children: [
+          TextButton(onPressed: this.moveLeft, child: const Text("<")),
+          TextButton(onPressed: this.moveRight, child: const Text(">")),
+          TextButton(onPressed: this.moveUp, child: const Text("^")),
+          TextButton(onPressed: this.moveDown, child: const Text("v")),
+          TextButton(onPressed: this.zoomIn, child: const Text("+")),
+          TextButton(onPressed: this.zoomOut, child: const Text("-")),
+        ]),
+        StreamBuilder<QuerySnapshot>(
+                stream: fetchUsersStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Container(
+                        width: double.infinity,
+                        height: 500,
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        child: Text("Error fetching data"));
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Container(
+                        width: double.infinity,
+                        height: 500,
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        child: Text("No user found"));
+                  }
 
-                var doc = snapshot.data!.docs.first;
-                Map<String, dynamic> personDetails = doc.data() as Map<String, dynamic>;
+                  var doc = snapshot.data!.docs.first;
+                  Map<String, dynamic> personDetails = doc.data() as Map<String, dynamic>;
 
-                final eq = const DeepCollectionEquality().equals;
+                  final eq = const DeepCollectionEquality().equals;
 
-                if(!eq(personDetails, prevPersonDetails))
-                {
-                  print("Auto-update data reached");
-                  
-                  memberSearched.changeRFIDLocation(personDetails['rfid_location']);
-                  memberSearched.name = personDetails['name'];
-                  memberSearched.institutionID = personDetails['institution_id'];
-                  memberSearched.id = personDetails['id'];
-                  
-                  print("Auto-update data left");
-                  print(memberSearched.room);
-                  print(memberSearched.floor);
-                  print(memberSearched.building);
-                  //prevPersonDetails = personDetails;
-                  prevPersonDetails = Map.from(personDetails);
-                  //loadFloors();
+                  if (!eq(personDetails, prevPersonDetails)) {
+                    print("Auto-update data reached");
 
-                  for(Room room in roomsOnFloor)
-                    {
-                      if(room.roomName == memberSearched.room)
-                      {
+                    memberSearched.changeRFIDLocation(personDetails['rfid_location']);
+                    memberSearched.name = personDetails['name'];
+                    memberSearched.institutionID = personDetails['institution_id'];
+                    memberSearched.id = personDetails['id'];
+
+                    print("Auto-update data left");
+                    print(memberSearched.room);
+                    print(memberSearched.floor);
+                    print(memberSearched.building);
+                    //prevPersonDetails = personDetails;
+                    prevPersonDetails = Map.from(personDetails);
+                    //loadFloors();
+
+                    for (Room room in roomsOnFloor) {
+                      if (room.roomName == memberSearched.room) {
                         centering = room.roomCenter;
                       }
                     }
-                }
-                return GestureDetector
-            (
-              onScaleStart: _onScaleStart,
-              onScaleUpdate: _onScaleUpdate,
-              child: Container(
-                width: double.infinity,
-                height: 500,
-                color: const Color.fromARGB(255, 255, 255, 255),
-                child: mapLoadingUp 
-                ? Center(child: CircularProgressIndicator())
-                : CustomPaint(
-                painter: PointsPainter(
-                      xposition, yposition, scale, roomsOnFloor, memberSearched, buildingBoundaries, centering, getPathAndSize,
-                ))
-            )
-            );
-              },
-            ),]),
-        );
+                  }
+                  return GestureDetector(
+                      onScaleStart: _onScaleStart,
+                      onScaleUpdate: _onScaleUpdate,
+                      child: Container(
+                          width: double.infinity,
+                          height: 500,
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                          child: mapLoadingUp
+                              ? Center(child: CircularProgressIndicator())
+                              : CustomPaint(
+                                  painter: PointsPainter(
+                                  xposition,
+                                  yposition,
+                                  scale,
+                                  roomsOnFloor,
+                                  memberSearched,
+                                  buildingBoundaries,
+                                  centering,
+                                  getPathAndSize,
+                                ))));
+                },
+              ),
+      ]),
+    );
   }
 }
 
@@ -386,7 +386,7 @@ class PointsPainter extends CustomPainter {
 
   late List<Path> roomPaths = <Path>[];
 
-  final void Function(List<Path>,Size) sendPath;
+  final void Function(List<Path>, Size) sendPath;
 
   final pathPaintStrokeAbsent = Paint()
     ..strokeWidth = 2.0
@@ -406,41 +406,41 @@ class PointsPainter extends CustomPainter {
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.fill;
 
-  PointsPainter(this.xposition, this.yposition, this.scale, this.roomsOnFloor,this.memberSearched, this.buildingBoundaries, this.roomCentering, this.sendPath);
+  PointsPainter(this.xposition, this.yposition, this.scale, this.roomsOnFloor, this.memberSearched,
+      this.buildingBoundaries, this.roomCentering, this.sendPath);
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.translate((size.width/2 - scale*(roomCentering.dx)), (size.height/2 - scale*(roomCentering.dy)));
-    
+    canvas.translate((size.width / 2 - scale * (roomCentering.dx)),
+        (size.height / 2 - scale * (roomCentering.dy)));
+
     final textStyle = TextStyle(
       color: const Color.fromARGB(255, 0, 154, 82),
-      fontSize: scale*20,
+      fontSize: scale * 20,
     );
 
     List<Offset> buildingVerticesTranformed = <Offset>[];
     Path buildingPath = Path();
     bool buildingPointFirst = true;
-    
-    for(Offset buildingVertex in buildingBoundaries)
-    {
-      Offset transformedBuildingVertex = Offset(scale * (buildingVertex.dx - xposition),scale * (buildingVertex.dy - yposition));
+
+    for (Offset buildingVertex in buildingBoundaries) {
+      Offset transformedBuildingVertex =
+          Offset(scale * (buildingVertex.dx - xposition), scale * (buildingVertex.dy - yposition));
       buildingVerticesTranformed.add(transformedBuildingVertex);
     }
 
     for (int i = 0; i < buildingVerticesTranformed.length; i++) {
-        Offset start = buildingVerticesTranformed[i];
-        Offset end = buildingVerticesTranformed[(i + 1) % buildingVerticesTranformed.length];
+      Offset start = buildingVerticesTranformed[i];
+      Offset end = buildingVerticesTranformed[(i + 1) % buildingVerticesTranformed.length];
 
-         if(buildingPointFirst){
-            buildingPath.moveTo(start.dx, start.dy);
-            buildingPath.lineTo(end.dx, end.dy);
-            buildingPointFirst = false;
-        }
-        else
-        {
-          buildingPath.lineTo(end.dx, end.dy);
-        }
+      if (buildingPointFirst) {
+        buildingPath.moveTo(start.dx, start.dy);
+        buildingPath.lineTo(end.dx, end.dy);
+        buildingPointFirst = false;
+      } else {
+        buildingPath.lineTo(end.dx, end.dy);
+      }
     }
 
     buildingPath.close();
@@ -452,89 +452,82 @@ class PointsPainter extends CustomPainter {
       Path roomPath = Path();
 
       List<Offset> pointsTransformed = room.roomVertices.map((point) {
-        return Offset(
-            scale * (point.dx - xposition), scale * (point.dy - yposition));
+        return Offset(scale * (point.dx - xposition), scale * (point.dy - yposition));
       }).toList();
 
       bool noneInside = true;
       for (int i = 0; i < pointsTransformed.length; i++) {
-        if((pointsTransformed[i].dx < size.width - (size.width/2 - scale*(roomCentering.dx)) && pointsTransformed[i].dx > -1 * (size.width/2 - scale*(roomCentering.dx))) && 
-           (pointsTransformed[i].dy < size.height - (size.height/2 - scale*(roomCentering.dy)) && pointsTransformed[i].dy > -1 * (size.height/2 - scale*(roomCentering.dy))))
-        {
-            noneInside = false;
-            break;
+        if ((pointsTransformed[i].dx < size.width - (size.width / 2 - scale * (roomCentering.dx)) &&
+                pointsTransformed[i].dx > -1 * (size.width / 2 - scale * (roomCentering.dx))) &&
+            (pointsTransformed[i].dy <
+                    size.height - (size.height / 2 - scale * (roomCentering.dy)) &&
+                pointsTransformed[i].dy > -1 * (size.height / 2 - scale * (roomCentering.dy)))) {
+          noneInside = false;
+          break;
         }
       }
 
-      canvas.drawPoints(PointMode.points, [Offset(390,500)], pathPaintFill);
+      canvas.drawPoints(PointMode.points, [Offset(390, 500)], pathPaintFill);
 
-      if(noneInside) continue;
+      if (noneInside) continue;
 
       for (int i = 0; i < pointsTransformed.length; i++) {
         Offset start = pointsTransformed[i];
         Offset end = pointsTransformed[(i + 1) % pointsTransformed.length];
-        if(firstPoint){
-            roomPath.moveTo(start.dx, start.dy);
-            roomPath.lineTo(end.dx, end.dy);
-            firstPoint = false;
-        }
-        else
-        {
+        if (firstPoint) {
+          roomPath.moveTo(start.dx, start.dy);
+          roomPath.lineTo(end.dx, end.dy);
+          firstPoint = false;
+        } else {
           roomPath.lineTo(end.dx, end.dy);
         }
       }
 
       roomPaths.add(roomPath);
 
-      if(currentRoomName == memberSearched.room && memberSearched.name != "")
-      {
+      if (currentRoomName == memberSearched.room && memberSearched.name != "") {
         canvas.drawPath(roomPath, pathPaintStrokePresent);
         canvas.drawPath(roomPath, pathPaintFill);
-      }
-      else
-      {
+      } else {
         canvas.drawPath(roomPath, pathPaintStrokeAbsent);
       }
 
-      
-      if(currentRoomName == memberSearched.room && memberSearched.name != "") {
+      if (currentRoomName == memberSearched.room && memberSearched.name != "") {
         finalTextDisplayed = "Person in\n$currentRoomName";
       } else {
         finalTextDisplayed = currentRoomName;
       }
 
-
       TextSpan textSpan = TextSpan(
-      text: finalTextDisplayed,
-      style: textStyle,
+        text: finalTextDisplayed,
+        style: textStyle,
       );
 
       TextPainter textPainter = TextPainter(
-      textAlign: TextAlign.center,
-      text: textSpan,
-      textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+        text: textSpan,
+        textDirection: TextDirection.ltr,
       );
 
       textPainter.layout(
-      minWidth: 0,
-      maxWidth: size.width,
-
+        minWidth: 0,
+        maxWidth: size.width,
       );
 
       sumdX = 0;
       sumdY = 0;
-      for(Offset point in pointsTransformed)
-      {
+      for (Offset point in pointsTransformed) {
         sumdX += point.dx;
         sumdY += point.dy;
       }
-      avgdY = sumdY/pointsTransformed.length;
-      avgdX = sumdX/pointsTransformed.length;
+      avgdY = sumdY / pointsTransformed.length;
+      avgdX = sumdX / pointsTransformed.length;
 
-      textPainter.paint(canvas, Offset(avgdX - textPainter.width / 2, avgdY - textPainter.height / 2));
+      textPainter.paint(
+          canvas, Offset(avgdX - textPainter.width / 2, avgdY - textPainter.height / 2));
     }
 
-    sendPath(roomPaths,size);
+    sendPath(roomPaths, size);
   }
 
   @override
@@ -545,6 +538,7 @@ class PointsPainter extends CustomPainter {
         oldDelegate.roomsOnFloor != roomsOnFloor ||
         oldDelegate.avgdX != avgdX ||
         oldDelegate.memberSearched != memberSearched ||
-        oldDelegate.avgdY != avgdY ;
+        oldDelegate.buildingBoundaries != buildingBoundaries ||
+        oldDelegate.avgdY != avgdY;
   }
 }

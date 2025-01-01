@@ -3,6 +3,8 @@ import 'dropdown_widget.dart';
 import 'set_location_map.dart';
 import 'session_data/building_details.dart';
 
+import 'drawer.dart';
+
 class RoomEventDetails {
   String roomName;
   String eventName;
@@ -18,28 +20,23 @@ class LocationSetPage extends StatefulWidget {
 }
 
 class _LocationSetPageState extends State<LocationSetPage> {
-
   String selectedBuilding = BuildingDetails.buildings[0];
   String selectedFloor = BuildingDetails.floors[0];
 
-  List<DropdownMenuItem<String>> dynamicValuesBuilding()
-  {
+  List<DropdownMenuItem<String>> dynamicValuesBuilding() {
     List<DropdownMenuItem<String>> valuesBuilding = [];
 
-    for(String building in BuildingDetails.buildings)
-    {
+    for (String building in BuildingDetails.buildings) {
       valuesBuilding.add(DropdownMenuItem(value: building, child: Text(building)));
     }
 
     return valuesBuilding;
   }
 
-  List<DropdownMenuItem<String>> dynamicValuesFloors()
-  {
+  List<DropdownMenuItem<String>> dynamicValuesFloors() {
     List<DropdownMenuItem<String>> valuesFloors = [];
 
-    for(String floor in BuildingDetails.floors)
-    {
+    for (String floor in BuildingDetails.floors) {
       valuesFloors.add(DropdownMenuItem(value: floor, child: Text(floor)));
     }
 
@@ -55,14 +52,14 @@ class _LocationSetPageState extends State<LocationSetPage> {
       appBar: AppBar(
         title: const Text("Venue Details"),
       ),
+      drawer: CampusFindDrawer(),
       body: Column(
         children: [
           // Wrapping Row inside a Container with width constraints
           Container(
             child: Row(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween, // Ensure Row shrinks to fit
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, // Ensure Row shrinks to fit
               children: [
                 CustomDropdownButton(
                   value: selectedBuilding,
@@ -72,8 +69,7 @@ class _LocationSetPageState extends State<LocationSetPage> {
                       if (chosenBuilding != null) {
                         selectedBuilding = chosenBuilding;
                         _mapDetailsDisplayWidget.currentState!
-                            .changeFloorAndBuilding(
-                                selectedFloor, selectedBuilding);
+                            .changeFloorAndBuilding(selectedFloor, selectedBuilding);
                       }
                     });
                   },
@@ -87,8 +83,7 @@ class _LocationSetPageState extends State<LocationSetPage> {
                       if (chosenFloor != null) {
                         selectedFloor = chosenFloor;
                         _mapDetailsDisplayWidget.currentState!
-                            .changeFloorAndBuilding(
-                                selectedFloor, selectedBuilding);
+                            .changeFloorAndBuilding(selectedFloor, selectedBuilding);
                       }
                     });
                   },

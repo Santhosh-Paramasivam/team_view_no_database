@@ -5,4 +5,5 @@ class SessionDetails
   static String id = "";
   static String institution_id = "";
   static String name = "";
+  static String rfid_location = "";
 }
