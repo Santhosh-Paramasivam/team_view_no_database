@@ -1,8 +1,4 @@
-// ignore_for_file: avoid_print
-
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'display_location_map.dart';
 import 'search_members_bar.dart';
 import 'firebase_connections/singleton_firestore.dart';
@@ -11,6 +7,9 @@ import 'package:collection/collection.dart';
 import 'session_data/session_details.dart';
 
 import 'drawer.dart';
+
+import 'package:logger/logger.dart';
+import 'custom_logger.dart';
 
 class Member {
   String name;
@@ -41,21 +40,24 @@ class Member {
   }
 }
 
-class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+class MemberSearchPage extends StatefulWidget {
+  const MemberSearchPage({super.key});
 
   @override
-  State<SearchPage> createState() => _SearchPageState();
+  State<MemberSearchPage> createState() => _MemberSearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _MemberSearchPageState extends State<MemberSearchPage> {
   late String name;
   Map<String, dynamic>? jsonData;
+
+  Logger logger = Logger(printer: CustomPrinter("MemberSearchPage"));
 
   late String selectedInputType;
 
   late bool doDisplayMemberDetails;
   late bool doDisplayMember;
+
   late Member memberForMemberDetails;
   late String appUserInstitutionID;
 
@@ -104,6 +106,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Colors.white,
         appBar: MemberSearchBar(_memberSearchBar, displayMemberNew, displayMemberDetails),
         drawer: CampusFindDrawer(),
         body: SizedBox(
@@ -160,7 +163,9 @@ class _SearchPageState extends State<SearchPage> {
                           Padding(
                             padding: const EdgeInsets.fromLTRB(10, 15, 10, 15),
                             child: Text(
-                                "${memberForMemberDetails.building} / ${memberForMemberDetails.floor} / ${memberForMemberDetails.room}"),
+                              "${memberForMemberDetails.building} / ${memberForMemberDetails.floor} / ${memberForMemberDetails.room}",
+                              style: TextStyle(backgroundColor: Colors.white),
+                            ),
                           ),
                           const Spacer(),
                         ],
@@ -169,7 +174,8 @@ class _SearchPageState extends State<SearchPage> {
                       const SizedBox(
                         height: 15,
                       ),
-                      MemberDetails(this.memberForMemberDetails),
+                      //MemberDetails(this.memberForMemberDetails),
+                      MemberDetails(member: this.memberForMemberDetails)
                     ]);
                   },
                 ),
@@ -181,24 +187,39 @@ class _SearchPageState extends State<SearchPage> {
 class MemberDetails extends StatelessWidget {
   final Member member;
 
-  const MemberDetails(this.member, {super.key});
+  const MemberDetails({super.key, required this.member});
+
+  List<Widget> buildDetails() {
+    List<Widget> detailsList = <Widget>[];
+
+    detailsList.add(DetailsTile("Name : ${member.name}"));
+    detailsList.add(DetailsTile("Role: ${member.role}"));
+    detailsList.add(DetailsTile("Faculty ID: ${member.memberID}"));
+    //detailsList.add(DetailsTile("Register Number: ${member.memberID}"));
+    detailsList.add(DetailsTile("Status: ${member.status}"));
+
+    return detailsList;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 500,
-      height: 100,
-      child: Column(
-        children: [
-          //Text("ID: " + member.id.toString()),
-          if (member.name != "Default") Text("Name: ${member.name}"),
-          if (member.name != "Default") Text("Role: ${member.role}"),
-          if (member.role == "Professor") Text("Faculty ID: ${member.memberID}"),
-          if (member.role == "Student") Text("Register Number: ${member.memberID}"),
-          if (member.name != "Default") Text("Status: ${member.status}"),
-          //if(member.name != "Default") Text("Location: ${member.building} / ${member.floor} / ${member.room}")
-        ],
-      ),
-    );
+    return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey, width: 1),
+        ),
+        width: 500,
+        height: 200,
+        child: ListView(padding: EdgeInsets.zero, children: buildDetails()));
   }
+}
+
+class DetailsTile extends ListTile {
+  DetailsTile(String title, {super.key})
+      : super(
+            title: Text(
+              title,
+              style: const TextStyle(fontSize: 15, height: 0),
+            ),
+            minTileHeight: 0);
 }

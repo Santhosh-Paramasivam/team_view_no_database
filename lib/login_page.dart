@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:team_view_no_database_windows/search_members_page.dart';
-import 'options_page.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -209,14 +208,18 @@ class LoginPage extends StatelessWidget {
 
                   bool authenticated = await signIn();
                   if (authenticated) {
-                    logger.d("SessionDetails : ${SessionDetails.name} ${SessionDetails.id} ${SessionDetails.institution_id} ${SessionDetails.name}");
-                    
-                    Future.delayed(const Duration(seconds: 1), () {
-                      Navigator.push(
-                          context, MaterialPageRoute(builder: (context) => const SearchPage()));
-                    });
-                    // Navigator.push(
-                    //     context, MaterialPageRoute(builder: (context) => const SearchPage()));
+
+                    _emailInputController.clear();
+                    _passwordInputController.clear();
+
+                    _emailInputController.dispose();
+                    _passwordInputController.dispose();
+
+                    logger.d(
+                        "SessionDetails : ${SessionDetails.name} ${SessionDetails.id} ${SessionDetails.institution_id} ${SessionDetails.name}");
+
+                    Navigator.push(
+                        context, MaterialPageRoute(builder: (context) => const MemberSearchPage()));
                   }
                 })
           ],

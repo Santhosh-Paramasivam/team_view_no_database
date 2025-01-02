@@ -38,8 +38,10 @@ class CampusFindDrawer extends StatelessWidget {
             alignment: FractionalOffset.bottomCenter,
             child: Container(
                 child: Column(children: <Widget>[
-              Divider(),
+              Divider(height: 1),
               ListTile(
+                minTileHeight: 50,
+                leading: Icon(Icons.logout),
                 title: Text("Log Out"),
                 onTap: () {
                   signOut();
@@ -52,27 +54,35 @@ class CampusFindDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+        backgroundColor: Color(0xFFD9D9D9),
         child: Column(
-      children: <Widget>[
-        Expanded(
-            child: ListView(children: <Widget>[
-          buildDrawer(context),
-          ListTile(
-            title: Text("Search members"),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchPage()));
-            },
-          ),
-          ListTile(
-            title: Text("View Venues"),
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => const LocationSetPage()));
-            },
-          )
-        ])),
-        buildDrawerFooter(context)
-      ],
-    ));
+          children: <Widget>[
+            Expanded(
+                child: ListView(children: <Widget>[
+              buildDrawer(context),
+              ListTile(
+                leading: Icon(Icons.person),
+                minTileHeight: 48,
+                title: Text("Search members"),
+                onTap: () {
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) => const MemberSearchPage()));
+                },
+              ),
+              Divider(height: 1),
+              ListTile(
+                leading: Icon(Icons.place),
+                minTileHeight: 48,
+                title: Text("View Venues"),
+                onTap: () {
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (context) => const LocationSetPage()));
+                },
+              ),
+              Divider(height: 1),
+            ])),
+            buildDrawerFooter(context)
+          ],
+        ));
   }
 }

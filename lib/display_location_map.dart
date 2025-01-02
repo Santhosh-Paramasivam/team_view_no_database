@@ -92,11 +92,13 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   Map<String, dynamic> prevPersonDetails = Map<String, dynamic>();
 
   Logger logger = Logger(printer: CustomPrinter("MapDetailsDisplayWidgetState"));
+
   @override
   void initState() {
     super.initState();
 
-    memberSearched = Member("Default", "SRMIST/FirstFloor/Room2", "", "9", "Default Role", "Default ID", "Status ID");
+    memberSearched = Member(
+        "Default", "SRMIST/FirstFloor/Room2", "", "9", "Default Role", "Default ID", "Status ID");
 
     xposition = 0;
     yposition = 0;
@@ -109,18 +111,24 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
 
     mapLoadingUp = true;
     loadFloors();
-    mapLoadingUp = false;
+    mapLoadingUp = true;
   }
 
-  void refreshName(name) {
+  void refreshName(name) async {
     setState(() {
+      logger.d("Refresh Name Function Called");
+
       personName = name;
       xposition = 0;
       yposition = 0;
       scale = 0.6;
 
       mapLoadingUp = true;
-      loadFloors();
+    });
+
+    await loadFloors();
+
+    setState(() {
       mapLoadingUp = false;
     });
   }
@@ -174,6 +182,7 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
     logger.d("institutionDocName : ${institutionDocName}");
     logger.d("memberSearched building : ${memberSearched.building}");
     logger.d("building_boundaries : ${building}");
+    
     building_boundaries = jsonDecode(building['building_boundaries'])
         .map<List<int>>((item) => List<int>.from(item))
         .toList();
@@ -221,42 +230,6 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
     });
   }
 
-  void moveRight() {
-    setState(() {
-      xposition -= 20;
-    });
-  }
-
-  void moveUp() {
-    setState(() {
-      yposition += 20;
-    });
-  }
-
-  void moveDown() {
-    setState(() {
-      yposition -= 20;
-    });
-  }
-
-  void moveLeft() {
-    setState(() {
-      xposition += 20;
-    });
-  }
-
-  void zoomIn() {
-    setState(() {
-      scale += 0.3;
-    });
-  }
-
-  void zoomOut() {
-    setState(() {
-      scale -= 0.3;
-    });
-  }
-
   void getPathAndSize(List<Path> roomPaths, Size size) {
     this.drawingWindowSize = size;
     this.roomPaths = roomPaths;
@@ -288,81 +261,74 @@ class MapDetailsDisplayWidgetState extends State<MapDetailsDisplayWidget> {
   Widget build(BuildContext context) {
     return Container(
       child: Column(children: [
-        Row(children: [
-          TextButton(onPressed: this.moveLeft, child: const Text("<")),
-          TextButton(onPressed: this.moveRight, child: const Text(">")),
-          TextButton(onPressed: this.moveUp, child: const Text("^")),
-          TextButton(onPressed: this.moveDown, child: const Text("v")),
-          TextButton(onPressed: this.zoomIn, child: const Text("+")),
-          TextButton(onPressed: this.zoomOut, child: const Text("-")),
-        ]),
+        Divider(height: 1),
         StreamBuilder<QuerySnapshot>(
-                stream: fetchUsersStream(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Container(
-                        width: double.infinity,
-                        height: 500,
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        child: Text("Error fetching data"));
-                  }
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return Container(
-                        width: double.infinity,
-                        height: 500,
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        child: Text("No user found"));
-                  }
+          stream: fetchUsersStream(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Container(
+                  width: double.infinity,
+                  height: 500,
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                  child: Text("Error fetching data"));
+            }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return Container(
+                  width: double.infinity,
+                  height: 500,
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                  child: Text("No user found"));
+            }
 
-                  var doc = snapshot.data!.docs.first;
-                  Map<String, dynamic> personDetails = doc.data() as Map<String, dynamic>;
+            var doc = snapshot.data!.docs.first;
+            Map<String, dynamic> personDetails = doc.data() as Map<String, dynamic>;
 
-                  final eq = const DeepCollectionEquality().equals;
+            final eq = const DeepCollectionEquality().equals;
 
-                  if (!eq(personDetails, prevPersonDetails)) {
-                    print("Auto-update data reached");
+            if (!eq(personDetails, prevPersonDetails)) {
+              print("Auto-update data reached");
 
-                    memberSearched.changeRFIDLocation(personDetails['rfid_location']);
-                    memberSearched.name = personDetails['name'];
-                    memberSearched.institutionID = personDetails['institution_id'];
-                    memberSearched.id = personDetails['id'];
+              memberSearched.changeRFIDLocation(personDetails['rfid_location']);
+              memberSearched.name = personDetails['name'];
+              memberSearched.institutionID = personDetails['institution_id'];
+              memberSearched.id = personDetails['id'];
 
-                    print("Auto-update data left");
-                    print(memberSearched.room);
-                    print(memberSearched.floor);
-                    print(memberSearched.building);
-                    //prevPersonDetails = personDetails;
-                    prevPersonDetails = Map.from(personDetails);
-                    //loadFloors();
+              print("Auto-update data left");
+              print(memberSearched.room);
+              print(memberSearched.floor);
+              print(memberSearched.building);
+              //prevPersonDetails = personDetails;
+              prevPersonDetails = Map.from(personDetails);
+              //loadFloors();
 
-                    for (Room room in roomsOnFloor) {
-                      if (room.roomName == memberSearched.room) {
-                        centering = room.roomCenter;
-                      }
-                    }
-                  }
-                  return GestureDetector(
-                      onScaleStart: _onScaleStart,
-                      onScaleUpdate: _onScaleUpdate,
-                      child: Container(
-                          width: double.infinity,
-                          height: 500,
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                          child: mapLoadingUp
-                              ? Center(child: CircularProgressIndicator())
-                              : CustomPaint(
-                                  painter: PointsPainter(
-                                  xposition,
-                                  yposition,
-                                  scale,
-                                  roomsOnFloor,
-                                  memberSearched,
-                                  buildingBoundaries,
-                                  centering,
-                                  getPathAndSize,
-                                ))));
-                },
-              ),
+              for (Room room in roomsOnFloor) {
+                if (room.roomName == memberSearched.room) {
+                  centering = room.roomCenter;
+                }
+              }
+            }
+            return GestureDetector(
+                onScaleStart: _onScaleStart,
+                onScaleUpdate: _onScaleUpdate,
+                child: Container(
+                    width: double.infinity,
+                    height: 400,
+                    color: const Color.fromARGB(255, 255, 255, 255),
+                    child: mapLoadingUp
+                        ? Center(child: CircularProgressIndicator())
+                        : CustomPaint(
+                            painter: PointsPainter(
+                            xposition,
+                            yposition,
+                            scale,
+                            roomsOnFloor,
+                            memberSearched,
+                            buildingBoundaries,
+                            centering,
+                            getPathAndSize,
+                          ))));
+          },
+        ),
       ]),
     );
   }

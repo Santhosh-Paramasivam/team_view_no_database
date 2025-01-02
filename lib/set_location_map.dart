@@ -106,10 +106,8 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
         .firestore
         .collection("institution_members")
         .where("institution_id", isEqualTo: appUserInstitutionID)
-        .where("rfid_location",
-            isGreaterThanOrEqualTo: "$buildingName/$floorName")
-        .where("rfid_location",
-            isLessThanOrEqualTo: "$buildingName/$floorName\uf8ff")
+        .where("rfid_location", isGreaterThanOrEqualTo: "$buildingName/$floorName")
+        .where("rfid_location", isLessThanOrEqualTo: "$buildingName/$floorName\uf8ff")
         .snapshots();
   }
 
@@ -127,8 +125,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
         .limit(1)
         .get();
 
-    Map<String, dynamic> userData =
-        snapshot.docs[0].data() as Map<String, dynamic>;
+    Map<String, dynamic> userData = snapshot.docs[0].data() as Map<String, dynamic>;
 
     if (userData['rfid_location'] != location) {
       inRoom = true;
@@ -140,15 +137,11 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
         .firestore
         .collection('institution_members')
         .doc(snapshot.docs[0].id)
-        .update({
-      'rfid_location': location,
-      'in_room': inRoom,
-      'last_location_entry': Timestamp.now()
-    });
+        .update(
+            {'rfid_location': location, 'in_room': inRoom, 'last_location_entry': Timestamp.now()});
 
     inRoomSnackBar = inRoom;
   }
-
 
   void changeFloorAndBuilding(floor, building) {
     setState(() {
@@ -172,10 +165,8 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
           .firestore
           .collection("institution_members")
           .where("institution_id", isEqualTo: appUserInstitutionID)
-          .where("rfid_location",
-              isGreaterThanOrEqualTo: "$buildingName/$floorName")
-          .where("rfid_location",
-              isLessThanOrEqualTo: "$buildingName/$floorName\uf8ff")
+          .where("rfid_location", isGreaterThanOrEqualTo: "$buildingName/$floorName")
+          .where("rfid_location", isLessThanOrEqualTo: "$buildingName/$floorName\uf8ff")
           .snapshots();
     });
   }
@@ -252,7 +243,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
         roomsOnFloor.add(Room(points, key));
       });
 
-            mapLoadingUp = false;
+      mapLoadingUp = false;
     });
   }
 
@@ -267,26 +258,21 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
         fontSize: 16.0);
   }
 
-  void getPathAndSize(
-      List<Path> roomPaths, Size size, List<String> loadedRooms) {
+  void getPathAndSize(List<Path> roomPaths, Size size, List<String> loadedRooms) {
     this.drawingWindowSize = size;
     this.roomPaths = roomPaths;
     this.loadedRooms = loadedRooms;
   }
 
   Offset scaler(Offset unscaledPoint) {
-    return Offset(
-        unscaledPoint.dx -
-            (drawingWindowSize.width / 2 - scale * (mapOrigin.dx)),
-        unscaledPoint.dy -
-            (drawingWindowSize.height / 2 - scale * (mapOrigin.dy)));
+    return Offset(unscaledPoint.dx - (drawingWindowSize.width / 2 - scale * (mapOrigin.dx)),
+        unscaledPoint.dy - (drawingWindowSize.height / 2 - scale * (mapOrigin.dy)));
   }
 
   void _onTapDown(TapDownDetails details) {
     for (int i = 0; i < this.roomPaths.length; i++) {
       if (this.roomPaths[i].contains(scaler(details.localPosition))) {
-        String location =
-            "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
+        String location = "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
 
         print(location);
 
@@ -300,8 +286,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
   void _onDoubleTapDown(TapDownDetails details) async {
     for (int i = 0; i < this.roomPaths.length; i++) {
       if (this.roomPaths[i].contains(scaler(details.localPosition))) {
-        String location =
-            "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
+        String location = "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
 
         print(location);
 
@@ -327,10 +312,8 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
         (details.focalPoint - previousOffset).distance > 5) {
       setState(() {
         scale = initialScale * details.scale;
-        xposition -=
-            ((1 / scale) * (details.focalPoint.dx - previousOffset.dx)).toInt();
-        yposition -=
-            ((1 / scale) * (details.focalPoint.dy - previousOffset.dy)).toInt();
+        xposition -= ((1 / scale) * (details.focalPoint.dx - previousOffset.dx)).toInt();
+        yposition -= ((1 / scale) * (details.focalPoint.dy - previousOffset.dy)).toInt();
         previousOffset = details.focalPoint;
       });
     }
@@ -359,8 +342,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                       );
                     }
 
-                    if (eventSnapshot.connectionState ==
-                        ConnectionState.waiting) {
+                    if (eventSnapshot.connectionState == ConnectionState.waiting) {
                       return Container(
                           width: double.infinity,
                           height: 500,
@@ -396,17 +378,16 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                       ));
                     }
 
-                    Map<String, Map<String, dynamic>> eventDetailsOptimized =
-                        {};
+                    Map<String, Map<String, dynamic>> eventDetails = {};
                     Map<String, dynamic> eventDetail = {};
 
                     for (var doc in eventSnapshot.data!.docs) {
                       eventDetail = doc.data() as Map<String, dynamic>;
                       String location = eventDetail['room'];
-                      eventDetailsOptimized.addAll({location: eventDetail});
+                      eventDetails.addAll({location: eventDetail});
                     }
 
-                    print(eventDetailsOptimized);
+                    print(eventDetails);
 
                     return StreamBuilder(
                       stream: memberStreamObj,
@@ -420,14 +401,12 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                           );
                         }
 
-                        if (memberSnapshot.connectionState ==
-                            ConnectionState.waiting) {
+                        if (memberSnapshot.connectionState == ConnectionState.waiting) {
                           return Container(
                               width: double.infinity,
                               height: 500,
                               color: const Color.fromARGB(255, 255, 255, 255),
-                              child:
-                                  Center(child: CircularProgressIndicator()));
+                              child: Center(child: CircularProgressIndicator()));
                         }
 
                         if (!memberSnapshot.hasData) {
@@ -460,21 +439,20 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
 
                         /*
                         Map<String, Map<String, dynamic>>
-                            eventDetailsOptimized = {};
+                            eventDetails = {};
                         Map<String, dynamic> eventDetail = {};
 
                         for (var doc in eventSnapshot.data!.docs) {
                           eventDetail = doc.data() as Map<String, dynamic>;
                           String location = eventDetail['room'];
-                          eventDetailsOptimized.addAll({location: eventDetail});
+                          eventDetails.addAll({location: eventDetail});
                         }
                         */
 
                         List<Map<String, dynamic>> attendeesList = [];
                         for (var doc in memberSnapshot.data!.docs) {
                           print(doc.data() as Map<String, dynamic>);
-                          Map<String, dynamic> attendee =
-                              doc.data() as Map<String, dynamic>;
+                          Map<String, dynamic> attendee = doc.data() as Map<String, dynamic>;
 
                           attendeesList.add(attendee);
                         }
@@ -509,8 +487,8 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                               ),
                             ),
                           ),
-                          EventDetails(eventDetailsOptimized, roomClicked,
-                              floorName, buildingName, attendeesList),
+                          EventDetails(
+                              eventDetails, roomClicked, floorName, buildingName, attendeesList),
                         ]);
                       },
                     );
@@ -566,17 +544,8 @@ class MapPainter extends CustomPainter {
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.fill;
 
-  MapPainter(
-      this.xposition,
-      this.yposition,
-      this.scale,
-      this.roomsOnFloor,
-      this.buildingBoundaries,
-      this.roomCentering,
-      this.sendPath,
-      this.roomClicked,
-      this.buildingName,
-      this.floorName);
+  MapPainter(this.xposition, this.yposition, this.scale, this.roomsOnFloor, this.buildingBoundaries,
+      this.roomCentering, this.sendPath, this.roomClicked, this.buildingName, this.floorName);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -594,13 +563,11 @@ class MapPainter extends CustomPainter {
     bool buildingPointFirst = true;
 
     for (Offset buildingVertex in buildingBoundaries) {
-      Offset transformedBuildingVertex = Offset(
-          scale * (buildingVertex.dx - xposition),
-          scale * (buildingVertex.dy - yposition));
+      Offset transformedBuildingVertex =
+          Offset(scale * (buildingVertex.dx - xposition), scale * (buildingVertex.dy - yposition));
       buildingVerticesTranformed.add(transformedBuildingVertex);
 
-      buildingBoundariesSum = Offset(
-          buildingBoundariesSum.dx + transformedBuildingVertex.dx,
+      buildingBoundariesSum = Offset(buildingBoundariesSum.dx + transformedBuildingVertex.dx,
           buildingBoundariesSum.dy + transformedBuildingVertex.dy);
     }
 
@@ -612,8 +579,7 @@ class MapPainter extends CustomPainter {
 
     for (int i = 0; i < buildingVerticesTranformed.length; i++) {
       Offset start = buildingVerticesTranformed[i];
-      Offset end = buildingVerticesTranformed[
-          (i + 1) % buildingVerticesTranformed.length];
+      Offset end = buildingVerticesTranformed[(i + 1) % buildingVerticesTranformed.length];
 
       if (buildingPointFirst) {
         buildingPath.moveTo(start.dx, start.dy);
@@ -633,22 +599,16 @@ class MapPainter extends CustomPainter {
       Path roomPath = Path();
 
       List<Offset> pointsTransformed = room.roomVertices.map((point) {
-        return Offset(
-            scale * (point.dx - xposition), scale * (point.dy - yposition));
+        return Offset(scale * (point.dx - xposition), scale * (point.dy - yposition));
       }).toList();
 
       bool noneInside = true;
       for (int i = 0; i < pointsTransformed.length; i++) {
-        if ((pointsTransformed[i].dx <
-                    size.width -
-                        (size.width / 2 - scale * (roomCentering.dx)) &&
-                pointsTransformed[i].dx >
-                    -1 * (size.width / 2 - scale * (roomCentering.dx))) &&
+        if ((pointsTransformed[i].dx < size.width - (size.width / 2 - scale * (roomCentering.dx)) &&
+                pointsTransformed[i].dx > -1 * (size.width / 2 - scale * (roomCentering.dx))) &&
             (pointsTransformed[i].dy <
-                    size.height -
-                        (size.height / 2 - scale * (roomCentering.dy)) &&
-                pointsTransformed[i].dy >
-                    -1 * (size.height / 2 - scale * (roomCentering.dy)))) {
+                    size.height - (size.height / 2 - scale * (roomCentering.dy)) &&
+                pointsTransformed[i].dy > -1 * (size.height / 2 - scale * (roomCentering.dy)))) {
           noneInside = false;
           break;
         }
@@ -714,9 +674,7 @@ class MapPainter extends CustomPainter {
       avgdX = sumdX / pointsTransformed.length;
 
       textPainter.paint(
-          canvas,
-          Offset(
-              avgdX - textPainter.width / 2, avgdY - textPainter.height / 2));
+          canvas, Offset(avgdX - textPainter.width / 2, avgdY - textPainter.height / 2));
     }
 
     sendPath(roomPaths, size, loadedRooms);
@@ -735,7 +693,7 @@ class MapPainter extends CustomPainter {
 class EventDetails extends StatelessWidget {
   List<ListTile> eventDetailTiles = <ListTile>[];
 
-  Map<String, Map<String, dynamic>> eventDetailsOptimized = {};
+  Map<String, Map<String, dynamic>> eventDetails = {};
   String roomClicked;
   String floorName;
   String buildingName;
@@ -746,8 +704,7 @@ class EventDetails extends StatelessWidget {
       List<Map<String, dynamic>> attendeesList, String location) {
     List<Map<String, dynamic>> attendeesInRoom = [];
     for (Map<String, dynamic> attendee in attendeesList) {
-      if (attendee['rfid_location'] == location &&
-          attendee['in_room'] == true) {
+      if (attendee['rfid_location'] == location && attendee['in_room'] == true) {
         attendeesInRoom.add(attendee);
         numberOfAttendees++;
       }
@@ -756,9 +713,9 @@ class EventDetails extends StatelessWidget {
     return attendeesInRoom;
   }
 
-  EventDetails(this.eventDetailsOptimized, this.roomClicked, this.floorName,
-      this.buildingName, this.attendeesList) {
-    if (eventDetailsOptimized[roomClicked] == null) {
+  void displayEvent() {
+    //if there are no events for the room clicked, display "No events"
+    if (eventDetails[roomClicked] == null) {
       eventDetailTiles.add(const ListTile(
         dense: true,
         title: Text("No events"),
@@ -768,24 +725,23 @@ class EventDetails extends StatelessWidget {
       eventDetailTiles.add(ListTile(
         dense: true,
         title: Text(
-          "Event Name : " +
-              eventDetailsOptimized[roomClicked]!['name'].toString(),
+          "Event Name : ${eventDetails[roomClicked]!['name']}",
           style: TextStyle(fontSize: 12),
         ),
         minTileHeight: 0,
       ));
     }
+  }
 
-    String location = "$buildingName/$floorName/$roomClicked";
-    List<Map<String, dynamic>> attendeesInRoom =
-        getAttendeesInRoom(attendeesList, location);
-
+  void displayAttendeeCount() {
     eventDetailTiles.add(ListTile(
       dense: true,
       title: Text("Number of Attendees : $numberOfAttendees"),
       minTileHeight: 0,
     ));
+  }
 
+  void displayAttendeeNames(List<Map<String, dynamic>> attendeesInRoom) {
     for (Map<String, dynamic> attendee in attendeesInRoom) {
       eventDetailTiles.add(ListTile(
         dense: true,
@@ -793,6 +749,18 @@ class EventDetails extends StatelessWidget {
         minTileHeight: 0,
       ));
     }
+  }
+
+  EventDetails(
+      this.eventDetails, this.roomClicked, this.floorName, this.buildingName, this.attendeesList) {
+    displayEvent();
+
+    String location = "$buildingName/$floorName/$roomClicked";
+    List<Map<String, dynamic>> attendeesInRoom = getAttendeesInRoom(attendeesList, location);
+
+    displayAttendeeCount();
+
+    displayAttendeeNames(attendeesInRoom);
   }
 
   @override
