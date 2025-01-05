@@ -23,6 +23,7 @@ import 'global_config/global_config.dart';
 import 'firebase_connections/auth_error_messages.dart';
 import 'firebase_connections/firestore_error_messages.dart';
 
+
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
@@ -33,12 +34,6 @@ class LoginPage extends StatelessWidget {
 
   final Logger logger =
       Logger(printer: CustomPrinter("LoginPage"), level: GlobalConfig.loggingLevel);
-
-  void waitCrashApp() {
-    Future.delayed(const Duration(seconds: 5), () {
-      exit(0);
-    });
-  }
 
   void putToast(String message) {
     Fluttertoast.showToast(
@@ -208,7 +203,6 @@ class LoginPage extends StatelessWidget {
 
                   bool authenticated = await signIn();
                   if (authenticated) {
-
                     _emailInputController.clear();
                     _passwordInputController.clear();
 

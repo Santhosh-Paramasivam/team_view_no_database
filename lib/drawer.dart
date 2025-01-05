@@ -12,9 +12,11 @@ import 'firebase_connections/singleton_auth.dart';
 import 'login_page.dart';
 
 class CampusFindDrawer extends StatelessWidget {
-  Logger logger = Logger(printer: CustomPrinter("CampusFindDrawer"));
+  final Logger logger = Logger(printer: CustomPrinter("CampusFindDrawer"));
 
   final FirebaseAuth _auth = AuthenticationService().firebaseAuth;
+
+  CampusFindDrawer({super.key});
 
   Future<void> signOut() async {
     await _auth.signOut();
@@ -33,53 +35,51 @@ class CampusFindDrawer extends StatelessWidget {
   }
 
   Widget buildDrawerFooter(BuildContext context) {
-    return Container(
-        child: Align(
-            alignment: FractionalOffset.bottomCenter,
-            child: Container(
-                child: Column(children: <Widget>[
-              Divider(height: 1),
-              ListTile(
-                minTileHeight: 50,
-                leading: Icon(Icons.logout),
-                title: Text("Log Out"),
-                onTap: () {
-                  signOut();
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
-                },
-              )
-            ]))));
+    return Align(
+        alignment: FractionalOffset.bottomCenter,
+        child: Column(children: <Widget>[
+          const Divider(height: 1),
+          ListTile(
+            minTileHeight: 50,
+            leading: const Icon(Icons.logout),
+            title: const Text("Log Out"),
+            onTap: () {
+              signOut();
+              Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
+            },
+          )
+        ]));
   }
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
-        backgroundColor: Color(0xFFD9D9D9),
+        backgroundColor: const Color(0xFFD9D9D9),
         child: Column(
           children: <Widget>[
             Expanded(
                 child: ListView(children: <Widget>[
               buildDrawer(context),
               ListTile(
-                leading: Icon(Icons.person),
+                leading: const Icon(Icons.person),
                 minTileHeight: 48,
-                title: Text("Search members"),
+                title: const Text("Search members"),
                 onTap: () {
                   Navigator.push(
                       context, MaterialPageRoute(builder: (context) => const MemberSearchPage()));
                 },
               ),
-              Divider(height: 1),
+              const Divider(height: 1),
               ListTile(
-                leading: Icon(Icons.place),
+                leading: const Icon(Icons.place),
                 minTileHeight: 48,
-                title: Text("View Venues"),
+                title: const Text("View Venues"),
                 onTap: () {
                   Navigator.push(
                       context, MaterialPageRoute(builder: (context) => const LocationSetPage()));
                 },
               ),
-              Divider(height: 1),
+              const Divider(height: 1),
             ])),
             buildDrawerFooter(context)
           ],

@@ -4,9 +4,11 @@ import 'package:team_view_no_database_windows/session_data/session_details.dart'
 
 class MemberSearchBar extends StatefulWidget implements PreferredSizeWidget {
   final void Function(String) displayMemberNew;
-  final void Function(String) displayMemberDetails;
 
-  const MemberSearchBar(Key key, this.displayMemberNew, this.displayMemberDetails);
+  const MemberSearchBar(
+    Key key,
+    this.displayMemberNew,
+  );
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -35,12 +37,12 @@ class MemberSearchBarState extends State<MemberSearchBar> {
 
   Future<List<String>> fetchSearchSuggestions(String query) async {
     final querySnapshot = await FirebaseFirestore.instance
-    .collection("institution_members")
-    .where("institution_id", isEqualTo: appUserInstitutionID)
-    .where("name", isGreaterThanOrEqualTo: query)
-    .where("name", isLessThanOrEqualTo: "$query\uf8ff")
-    .limit(5)
-    .get();
+        .collection("institution_members")
+        .where("institution_id", isEqualTo: appUserInstitutionID)
+        .where("name", isGreaterThanOrEqualTo: query)
+        .where("name", isLessThanOrEqualTo: "$query\uf8ff")
+        .limit(5)
+        .get();
 
     return querySnapshot.docs.map((doc) => doc["name"] as String).toList();
   }
@@ -60,7 +62,6 @@ class MemberSearchBarState extends State<MemberSearchBar> {
                 fetchSearchSuggestions,
                 widget.displayMemberNew,
                 updateSearchBarLabel,
-                widget.displayMemberDetails,
               ),
             );
           },
@@ -75,13 +76,11 @@ class CustomSearchDelegate extends SearchDelegate {
   final Future<List<String>> Function(String) fetchSearchSuggestions;
   final void Function(String) displayMemberNew;
   final void Function(String) updateSearchBarLabel;
-  final void Function(String) displayMemberDetails;
 
   CustomSearchDelegate(
     this.fetchSearchSuggestions,
     this.displayMemberNew,
     this.updateSearchBarLabel,
-    this.displayMemberDetails,
   );
 
   @override
@@ -130,7 +129,6 @@ class CustomSearchDelegate extends SearchDelegate {
                   query = result;
                   updateSearchBarLabel(query);
                   displayMemberNew(query);
-                  displayMemberDetails(query);
                   close(context, null);
                 },
                 child: Text(result),
@@ -166,7 +164,6 @@ class CustomSearchDelegate extends SearchDelegate {
                   query = result;
                   updateSearchBarLabel(query);
                   displayMemberNew(query);
-                  displayMemberDetails(query);
                   close(context, null);
                 },
                 child: Text(result),
