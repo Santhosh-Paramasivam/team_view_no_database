@@ -3,7 +3,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'firebase_connections/singleton_firestore.dart';
 import 'session_data/session_details.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,18 +10,6 @@ import 'session_data/building_details.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logger/logger.dart';
 import 'custom_logger.dart';
-
-/*
-
-This file contains the following classes:
-
-Room - Dataclass for storing room name, vertices and center point for map plotting purposes
-SetLocationMap - Stateful widget to load in map, event and member details and pass them to map painter
-SetLocationWidgetState - Where the actual code for the above stateful class is present
-MapPainter - Plots the room vertices, and places appropriate names in them.
-EventDetails - Shows event details and attendees
-
-*/
 
 class Room {
   List<Offset> roomVertices;
@@ -88,7 +75,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
     personName = "";
     floorName = BuildingDetails.floors[0];
 
-    appUserInstitutionID = SessionDetails.institution_id;
+    appUserInstitutionID = SessionDetails.institutionID;
     previousOffset = Offset.zero;
     initialScale = 1.0;
 

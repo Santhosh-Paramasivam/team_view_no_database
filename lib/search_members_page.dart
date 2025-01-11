@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
-
-import 'package:logger/logger.dart';
-
 import 'display_location_map.dart';
 import 'search_members_bar.dart';
-import 'drawer.dart';
-import 'custom_logger.dart';
-import 'custom_widgets/cf_detail_tile.dart';
-import 'custom_widgets/cf_toast.dart';
-
 import 'firebase_connections/singleton_firestore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-import 'session_data/session_details.dart';
-
 import 'package:collection/collection.dart';
-
-import 'firebase_connections/firestore_error_messages.dart';
+import 'session_data/session_details.dart';
 
 import 'dart:async';
 
+import 'drawer.dart';
+
+import 'package:logger/logger.dart';
+import 'custom_logger.dart';
+
+import 'custom_widgets/cf_detail_tile.dart';
+
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+
+import 'custom_widgets/cf_toast.dart';
+
+import 'firebase_connections/firestore_error_messages.dart';
 
 class Member {
   late String name;
@@ -62,8 +61,8 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
   late Member memberForMemberDetails;
   late String appUserInstitutionID;
 
-  final GlobalKey<MapDetailsDisplayWidgetState> _mapDetailsDisplayWidget =
-      GlobalKey<MapDetailsDisplayWidgetState>();
+  final GlobalKey<MemberLocationMapState> _mapDetailsDisplayWidget =
+      GlobalKey<MemberLocationMapState>();
   final GlobalKey<MemberSearchBarState> _memberSearchBar = GlobalKey<MemberSearchBarState>();
 
   Map<String, dynamic> prevPersonDetails = <String, dynamic>{};
@@ -75,7 +74,7 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
     super.initState();
     memberForMemberDetails = Member();
 
-    appUserInstitutionID = SessionDetails.institution_id;
+    appUserInstitutionID = SessionDetails.institutionID;
 
     displayMemberNew(SessionDetails.name);
     initTimer();
@@ -104,9 +103,8 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
 
       return usersStream;
     } on FirebaseException catch (e) {
-      logger.w("Firebase Exception : ${e.message} ${e.code}");
-      putToast(
-          "Warning : Unable to load user, ${FirestoreUserErrorMessages.errorCodeTranslations[e.code]}");
+      putToast("${FirestoreUserErrorMessages.errorCodeTranslations[e.code]}");
+      logger.e("${e.code} ${e.message}");
       return const Stream.empty();
     }
   }
@@ -163,25 +161,19 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
                   stream: fetchUsersStream(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.none) {
-                      putToast("Connection couldn't be established!");
-                      logger.w("Connection couldn't be established to Firestore");
-
                       return Container(
                           width: double.infinity,
                           height: 100,
                           color: const Color.fromARGB(255, 255, 255, 255),
-                          child: const Center(child: CircularProgressIndicator()));
+                          child: const Center(child: Text("Connection Failed")));
                     }
 
                     if (snapshot.hasError) {
-                      putToast("Connection couldn't be established!");
-                      logger.w("Firestore stream snapshot has errors");
-
                       return Container(
                           width: double.infinity,
                           height: 100,
                           color: const Color.fromARGB(255, 255, 255, 255),
-                          child: const Center(child: CircularProgressIndicator()));
+                          child: const Center(child: Text("Connection Failed")));
                     }
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                       return Container(
@@ -237,7 +229,7 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
                           const Spacer(),
                         ],
                       ),
-                      MapDetailsDisplayWidget(key: _mapDetailsDisplayWidget),
+                      MemberLocationMap(key: _mapDetailsDisplayWidget),
                       MemberDetails(
                           member: this.memberForMemberDetails, personDetails: personDetails)
                     ]);
@@ -265,7 +257,6 @@ class MemberDetails extends StatelessWidget {
 
     detailsList.add(DetailsTile("Role: ${member.role}"));
     detailsList.add(DetailsTile("Member ID: ${member.memberID}"));
-    detailsList.add(DetailsTile("In Room : ${member.inRoom}"));
     detailsList.add(DetailsTile("Status: ${member.status}"));
 
     return detailsList;

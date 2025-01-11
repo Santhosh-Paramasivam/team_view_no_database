@@ -136,11 +136,12 @@ class LoginPage extends StatelessWidget {
       Map<String, dynamic> member = currentUserData.data() as Map<String, dynamic>;
       SessionDetails.email = member['email_id'];
       SessionDetails.id = _auth.currentUser!.uid;
-      SessionDetails.institution_id = member['institution_id'];
+      SessionDetails.institutionID = member['institution_id'];
       SessionDetails.name = member['name'];
+      SessionDetails.rfidLocation = member['rfid_location'];
 
       logger.i("Before loading in floor names");
-      bool buildingsLoading = await loadBuildingFloorNames(SessionDetails.institution_id);
+      bool buildingsLoading = await loadBuildingFloorNames(SessionDetails.institutionID);
       logger.i("Done loading floor names");
 
       return buildingsLoading;
@@ -210,7 +211,7 @@ class LoginPage extends StatelessWidget {
                     _passwordInputController.dispose();
 
                     logger.d(
-                        "SessionDetails : ${SessionDetails.name} ${SessionDetails.id} ${SessionDetails.institution_id} ${SessionDetails.name}");
+                        "SessionDetails : ${SessionDetails.name} ${SessionDetails.id} ${SessionDetails.institutionID} ${SessionDetails.name}");
 
                     Navigator.push(
                         context, MaterialPageRoute(builder: (context) => const MemberSearchPage()));

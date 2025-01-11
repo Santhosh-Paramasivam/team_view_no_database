@@ -25,7 +25,7 @@ class MemberSearchBarState extends State<MemberSearchBar> {
   @override
   initState() {
     searchTerms = [];
-    appUserInstitutionID = SessionDetails.institution_id;
+    appUserInstitutionID = SessionDetails.institutionID;
     searchBarLabel = "Search People";
   }
 
