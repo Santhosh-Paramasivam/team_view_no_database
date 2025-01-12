@@ -1,4 +1,3 @@
-// ignore: unnecessary_import
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -7,9 +6,13 @@ import 'firebase_connections/singleton_firestore.dart';
 import 'session_data/session_details.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'session_data/building_details.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logger/logger.dart';
 import 'custom_logger.dart';
+
+import 'custom_widgets/cf_toast.dart';
+import 'firebase_connections/firestore_error_messages.dart';
+
+import 'custom_widgets/cf_detail_tile.dart';
 
 class Room {
   List<Offset> roomVertices;
@@ -47,16 +50,13 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
 
   late bool mapLoadingUp = true;
 
-  late Path path;
   late List<Path> roomPaths = <Path>[];
   late List<String> loadedRooms = <String>[];
 
-  late bool inRoomSnackBar;
-
   String roomClicked = "";
 
-  Stream<QuerySnapshot>? eventStreamObj;
-  Stream<QuerySnapshot>? memberStreamObj;
+  Stream<QuerySnapshot>? eventStream;
+  Stream<QuerySnapshot>? memberStream;
 
   Logger logger = Logger(
     printer: CustomPrinter("SetLocationState"),
@@ -81,53 +81,54 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
 
     loadFloors();
 
-    eventStreamObj = FirestoreService()
-        .firestore
-        .collection("events")
-        .where("institution_id", isEqualTo: appUserInstitutionID)
-        .where("building", isEqualTo: buildingName)
-        .where("floor", isEqualTo: floorName)
-        .snapshots();
-
-    memberStreamObj = FirestoreService()
-        .firestore
-        .collection("institution_members")
-        .where("institution_id", isEqualTo: appUserInstitutionID)
-        .where("rfid_location", isGreaterThanOrEqualTo: "$buildingName/$floorName")
-        .where("rfid_location", isLessThanOrEqualTo: "$buildingName/$floorName\uf8ff")
-        .snapshots();
+    refreshEventStream(buildingName, floorName);
+    refreshMemberStream(buildingName, floorName);
   }
 
   //When a room is double-tapped, this function sets the users location to that room
-  Future<void> updateLocation(String location) async {
+  Future<bool> updateLocation(String location) async {
     logger.i("Update Location Func Reached");
 
     bool inRoom;
+    try {
+      QuerySnapshot userSnapshot = await FirestoreService()
+          .firestore
+          .collection('institution_members')
+          .where('institution_id', isEqualTo: appUserInstitutionID)
+          .where('id', isEqualTo: SessionDetails.id)
+          .limit(1)
+          .get();
 
-    QuerySnapshot snapshot = await FirestoreService()
-        .firestore
-        .collection('institution_members')
-        .where('institution_id', isEqualTo: appUserInstitutionID)
-        .where('id', isEqualTo: SessionDetails.id)
-        .limit(1)
-        .get();
+      if (userSnapshot.docs.isEmpty) {
+        putToast("User data not available");
+        logger.e("User data not available");
+      }
 
-    Map<String, dynamic> userData = snapshot.docs[0].data() as Map<String, dynamic>;
+      Map<String, dynamic> userData = userSnapshot.docs[0].data() as Map<String, dynamic>;
 
-    if (userData['rfid_location'] != location) {
-      inRoom = true;
-    } else {
-      inRoom = !userData['in_room'];
+      if (userData['rfid_location'] != location) {
+        inRoom = true;
+      } else {
+        inRoom = !userData['in_room'];
+      }
+
+      await FirestoreService()
+          .firestore
+          .collection('institution_members')
+          .doc(userSnapshot.docs[0].id)
+          .update({
+        'rfid_location': location,
+        'in_room': inRoom,
+        'last_location_entry': Timestamp.now()
+      });
+
+      return inRoom;
+    } on FirebaseException catch (e) {
+      putToast(
+          "Error Updating Location : ${FirestoreUserErrorMessages.errorCodeTranslations[e.code]}");
+      logger.e("${e.code} ${e.message}");
+      return false;
     }
-
-    await FirestoreService()
-        .firestore
-        .collection('institution_members')
-        .doc(snapshot.docs[0].id)
-        .update(
-            {'rfid_location': location, 'in_room': inRoom, 'last_location_entry': Timestamp.now()});
-
-    inRoomSnackBar = inRoom;
   }
 
   void changeFloorAndBuilding(floor, building) {
@@ -136,113 +137,146 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
       floorName = floor;
       buildingName = building;
       roomClicked = "";
-      print(floorName);
+      logger.d(floorName);
       loadFloors();
 
       //Refreshing the event and member streams to the new floor
-      eventStreamObj = FirestoreService()
+      refreshEventStream(buildingName, floorName);
+      refreshMemberStream(buildingName, floorName);
+    });
+  }
+
+  void refreshEventStream(String buildingName, String floorName) {
+    try {
+      eventStream = FirestoreService()
           .firestore
           .collection("events")
           .where("institution_id", isEqualTo: appUserInstitutionID)
           .where("building", isEqualTo: buildingName)
           .where("floor", isEqualTo: floorName)
           .snapshots();
+    } on FirebaseException catch (e) {
+      putToast("${FirestoreUserErrorMessages.errorCodeTranslations[e.code]}");
+      logger.e("${e.code} ${e.message}");
 
-      memberStreamObj = FirestoreService()
+      eventStream = const Stream.empty();
+    }
+  }
+
+  void refreshMemberStream(String buildingName, String floorName) {
+    try {
+      memberStream = FirestoreService()
           .firestore
           .collection("institution_members")
           .where("institution_id", isEqualTo: appUserInstitutionID)
           .where("rfid_location", isGreaterThanOrEqualTo: "$buildingName/$floorName")
           .where("rfid_location", isLessThanOrEqualTo: "$buildingName/$floorName\uf8ff")
           .snapshots();
-    });
+    } on FirebaseException catch (e) {
+      putToast("${FirestoreUserErrorMessages.errorCodeTranslations[e.code]}");
+      logger.e("${e.code} ${e.message}");
+
+      memberStream = const Stream.empty();
+    }
   }
 
   Future<void> loadFloors() async {
     roomsOnFloor.clear();
 
-    Map<String, dynamic> institution = {};
     String institutionDocName = '';
     String buildingDocName = '';
     Map<String, dynamic> building = {};
-    List<List<int>> building_boundaries = [];
+    List<List<int>> buildingBoundariesInt = [];
     late Map<String, dynamic> floor = {};
 
-    QuerySnapshot snapshot = await FirestoreService()
-        .firestore
-        .collection('institution_buildings')
-        .where('institution_id', isEqualTo: appUserInstitutionID)
-        .limit(1)
-        .get();
+    try {
+      QuerySnapshot institutionBuildingSnapshot = await FirestoreService()
+          .firestore
+          .collection('institution_buildings')
+          .where('institution_id', isEqualTo: appUserInstitutionID)
+          .limit(1)
+          .get();
 
-    for (QueryDocumentSnapshot doc in snapshot.docs) {
-      institutionDocName = doc.id;
-      institution = doc.data() as Map<String, dynamic>;
-    }
+      if (institutionBuildingSnapshot.docs.isEmpty) {
+        putToast("No buildings in the institution");
+        logger.f("No buildings in the institution $appUserInstitutionID");
+      }
 
-    QuerySnapshot snapshot1 = await FirestoreService()
-        .firestore
-        .collection('institution_buildings')
-        .doc(institutionDocName)
-        .collection('buildings')
-        .where("building_name", isEqualTo: buildingName)
-        .limit(1)
-        .get();
+      QueryDocumentSnapshot institutionBuilding = institutionBuildingSnapshot.docs.first;
+      institutionDocName = institutionBuilding.id;
 
-    for (QueryDocumentSnapshot doc in snapshot1.docs) {
-      buildingDocName = doc.id;
-      building = doc.data() as Map<String, dynamic>;
-    }
+      QuerySnapshot selectedBuildingSnapshot = await FirestoreService()
+          .firestore
+          .collection('institution_buildings')
+          .doc(institutionDocName)
+          .collection('buildings')
+          .where("building_name", isEqualTo: buildingName)
+          .limit(1)
+          .get();
 
-    building_boundaries = jsonDecode(building['building_boundaries'])
-        .map<List<int>>((item) => List<int>.from(item))
-        .toList();
+      if (selectedBuildingSnapshot.docs.isEmpty) {
+        putToast("Member building not found in institution");
+        logger.f("Member building not found in the institution : $appUserInstitutionID");
+      }
 
-    for (List<int> point in building_boundaries) {
-      buildingBoundaries.add(Offset(point[0].toDouble(), point[1].toDouble()));
-    }
+      QueryDocumentSnapshot memberBuilding = selectedBuildingSnapshot.docs.first;
+      buildingDocName = memberBuilding.id;
+      building = memberBuilding.data() as Map<String, dynamic>;
 
-    QuerySnapshot snapshot2 = await FirestoreService()
-        .firestore
-        .collection('institution_buildings')
-        .doc(institutionDocName)
-        .collection('buildings')
-        .doc(buildingDocName)
-        .collection('floors')
-        .where('floor_name', isEqualTo: floorName)
-        .limit(1)
-        .get();
+      logger.d("institutionDocName : $institutionDocName");
+      logger.d("memberSearched building : $buildingName");
+      logger.d("buildingBoundariesInt : $building");
 
-    for (QueryDocumentSnapshot doc in snapshot2.docs) {
-      //buildingDocName = doc.id;
-      floor = doc.data() as Map<String, dynamic>;
+      //Decodes building boundaries into list of coordinates
+      buildingBoundariesInt = jsonDecode(building['building_boundaries'])
+          .map<List<int>>((item) => List<int>.from(item))
+          .toList();
+
+      //Coordinate values converted to Offset
+      for (List<int> point in buildingBoundariesInt) {
+        buildingBoundaries.add(Offset(point[0].toDouble(), point[1].toDouble()));
+      }
+
+      QuerySnapshot selectedFloorSnapshot = await FirestoreService()
+          .firestore
+          .collection('institution_buildings')
+          .doc(institutionDocName)
+          .collection('buildings')
+          .doc(buildingDocName)
+          .collection('floors')
+          .where('floor_name', isEqualTo: floorName)
+          .limit(1)
+          .get();
+
+      if (selectedFloorSnapshot.docs.isEmpty) {
+        putToast("Member floor not found in the institution");
+        logger.f("Member floor not found in the institution : $appUserInstitutionID");
+      }
+
+      QueryDocumentSnapshot memberFloor = selectedFloorSnapshot.docs.first;
+
+      //Loads floor map values
+      floor = memberFloor.data() as Map<String, dynamic>;
       floor = json.decode(floor['rooms_on_floor']) as Map<String, dynamic>;
+    } on FirebaseException catch (e) {
+      putToast("${FirestoreUserErrorMessages.errorCodeTranslations[e.code]}");
+      logger.e("${e.code} ${e.message}");
+      return;
     }
+
+    floor.forEach((key, value) {
+      List<Offset> points = (value as List).map<Offset>((item) {
+        double x = item[0].toDouble();
+        double y = item[1].toDouble();
+        return Offset(x, y);
+      }).toList();
+
+      roomsOnFloor.add(Room(points, key));
+    });
 
     setState(() {
-      floor.forEach((key, value) {
-        List<Offset> points = (value as List).map<Offset>((item) {
-          double x = item[0].toDouble();
-          double y = item[1].toDouble();
-          return Offset(x, y);
-        }).toList();
-
-        roomsOnFloor.add(Room(points, key));
-      });
-
       mapLoadingUp = false;
     });
-  }
-
-  void putToast(String message) {
-    Fluttertoast.showToast(
-        msg: message,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.white,
-        textColor: Colors.black,
-        fontSize: 16.0);
   }
 
   void getPathAndSize(List<Path> roomPaths, Size size, List<String> loadedRooms) {
@@ -261,7 +295,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
       if (this.roomPaths[i].contains(scaler(details.localPosition))) {
         String location = "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
 
-        print(location);
+        logger.d(location);
 
         setState(() {
           roomClicked = this.loadedRooms[i];
@@ -275,15 +309,15 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
       if (this.roomPaths[i].contains(scaler(details.localPosition))) {
         String location = "${this.buildingName}/${this.floorName}/${this.loadedRooms[i]}";
 
-        print(location);
+        logger.d(location);
 
-        await updateLocation(location);
-        print("done");
+        bool enteredRoom = await updateLocation(location);
+        logger.d("done");
 
-        if (inRoomSnackBar) {
-          putToast("You entered " + location);
+        if (enteredRoom) {
+          putToast("You entered $location");
         } else {
-          putToast("You exited " + location);
+          putToast("You exited $location");
         }
       }
     }
@@ -308,181 +342,173 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        children: [
-          mapLoadingUp
-              ? Container(
-                  width: double.infinity,
-                  height: 500,
-                  color: const Color.fromARGB(255, 255, 255, 255),
-                  child: Center(child: CircularProgressIndicator()))
-              : StreamBuilder(
-                  stream: eventStreamObj,
-                  builder: (context, eventSnapshot) {
-                    if (eventSnapshot.hasError) {
-                      return Container(
+    return Column(
+      children: [
+        mapLoadingUp
+            ? Container(
+                width: double.infinity,
+                height: 500,
+                color: const Color.fromARGB(255, 255, 255, 255),
+                child: const Center(child: CircularProgressIndicator()))
+            : StreamBuilder(
+                stream: eventStream,
+                builder: (context, eventSnapshot) {
+                  if (eventSnapshot.hasError) {
+                    logger.e("eventSnapshot has an error");
+
+                    return Container(
+                      width: double.infinity,
+                      height: 100,
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      child: const Center(child: Text("Error fetching data")),
+                    );
+                  }
+
+                  if (eventSnapshot.connectionState == ConnectionState.waiting) {
+                    return Container(
                         width: double.infinity,
-                        height: 100,
+                        height: 500,
                         color: const Color.fromARGB(255, 255, 255, 255),
-                        child: Text("Error fetching data"),
-                      );
-                    }
+                        child: const Center(child: CircularProgressIndicator()));
+                  }
 
-                    if (eventSnapshot.connectionState == ConnectionState.waiting) {
-                      return Container(
-                          width: double.infinity,
-                          height: 500,
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                          child: Center(child: CircularProgressIndicator()));
-                    }
+                  if (!eventSnapshot.hasData) {
+                    logger.e("User snapshot doesn't have any data");
+                    return RepaintBoundary(
+                        child: GestureDetector(
+                      onScaleStart: _onScaleStart,
+                      onScaleUpdate: _onScaleUpdate,
+                      onDoubleTapDown: _onDoubleTapDown,
+                      onTapDown: _onTapDown,
+                      child: Container(
+                        width: double.infinity,
+                        height: 400,
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        child: CustomPaint(
+                          painter: MapPainter(
+                              xposition,
+                              yposition,
+                              scale,
+                              roomsOnFloor,
+                              buildingBoundaries,
+                              mapOrigin,
+                              getPathAndSize,
+                              roomClicked,
+                              buildingName,
+                              floorName),
+                        ),
+                      ),
+                    ));
+                  }
 
-                    if (!eventSnapshot.hasData) {
-                      return RepaintBoundary(
-                          child: GestureDetector(
-                        onScaleStart: _onScaleStart,
-                        onScaleUpdate: _onScaleUpdate,
-                        onDoubleTapDown: _onDoubleTapDown,
-                        onTapDown: _onTapDown,
-                        child: Container(
+                  Map<String, Map<String, dynamic>> eventDetails = {};
+                  Map<String, dynamic> eventDetail = {};
+
+                  for (var doc in eventSnapshot.data!.docs) {
+                    eventDetail = doc.data() as Map<String, dynamic>;
+                    String location = eventDetail['room'];
+                    eventDetails.addAll({location: eventDetail});
+                  }
+
+                  logger.d(eventDetails);
+
+                  return StreamBuilder(
+                    stream: memberStream,
+                    builder: (context, memberSnapshot) {
+                      if (memberSnapshot.hasError) {
+                        logger.e("member stream snapshot has an error");
+
+                        return Container(
                           width: double.infinity,
-                          height: 400,
+                          height: 100,
                           color: const Color.fromARGB(255, 255, 255, 255),
-                          child: CustomPaint(
-                            painter: MapPainter(
-                                xposition,
-                                yposition,
-                                scale,
-                                roomsOnFloor,
-                                buildingBoundaries,
-                                mapOrigin,
-                                getPathAndSize,
-                                roomClicked,
-                                buildingName,
-                                floorName),
+                          child: const Center(child: Text("Error fetching data")),
+                        );
+                      }
+
+                      if (memberSnapshot.connectionState == ConnectionState.waiting) {
+                        return Container(
+                            width: double.infinity,
+                            height: 500,
+                            color: const Color.fromARGB(255, 255, 255, 255),
+                            child: const Center(child: CircularProgressIndicator()));
+                      }
+
+                      if (!memberSnapshot.hasData || memberSnapshot.data!.docs.isEmpty) {
+                        logger.w("member stream snapshot is empty");
+
+                        return RepaintBoundary(
+                            child: GestureDetector(
+                          onScaleStart: _onScaleStart,
+                          onScaleUpdate: _onScaleUpdate,
+                          onDoubleTapDown: _onDoubleTapDown,
+                          onTapDown: _onTapDown,
+                          child: Container(
+                            width: double.infinity,
+                            height: 400,
+                            color: const Color.fromARGB(255, 255, 255, 255),
+                            child: CustomPaint(
+                              painter: MapPainter(
+                                  xposition,
+                                  yposition,
+                                  scale,
+                                  roomsOnFloor,
+                                  buildingBoundaries,
+                                  mapOrigin,
+                                  getPathAndSize,
+                                  roomClicked,
+                                  buildingName,
+                                  floorName),
+                            ),
+                          ),
+                        ));
+                      }
+
+                      // All attendees in the floor are added to a list
+                      List<Map<String, dynamic>> attendeesList = [];
+                      for (var doc in memberSnapshot.data!.docs) {
+                        logger.d(doc.data() as Map<String, dynamic>);
+                        Map<String, dynamic> attendee = doc.data() as Map<String, dynamic>;
+
+                        attendeesList.add(attendee);
+                      }
+
+                      logger.d("Member : ");
+                      logger.d(memberSnapshot.data!.size);
+
+                      return Column(children: [
+                        GestureDetector(
+                          onScaleStart: _onScaleStart,
+                          onScaleUpdate: _onScaleUpdate,
+                          onDoubleTapDown: _onDoubleTapDown,
+                          onTapDown: _onTapDown,
+                          child: Container(
+                            width: double.infinity,
+                            height: 400,
+                            color: const Color.fromARGB(255, 255, 255, 255),
+                            child: CustomPaint(
+                              painter: MapPainter(
+                                  xposition,
+                                  yposition,
+                                  scale,
+                                  roomsOnFloor,
+                                  buildingBoundaries,
+                                  mapOrigin,
+                                  getPathAndSize,
+                                  roomClicked,
+                                  buildingName,
+                                  floorName),
+                            ),
                           ),
                         ),
-                      ));
-                    }
-
-                    Map<String, Map<String, dynamic>> eventDetails = {};
-                    Map<String, dynamic> eventDetail = {};
-
-                    for (var doc in eventSnapshot.data!.docs) {
-                      eventDetail = doc.data() as Map<String, dynamic>;
-                      String location = eventDetail['room'];
-                      eventDetails.addAll({location: eventDetail});
-                    }
-
-                    print(eventDetails);
-
-                    return StreamBuilder(
-                      stream: memberStreamObj,
-                      builder: (context, memberSnapshot) {
-                        if (memberSnapshot.hasError) {
-                          return Container(
-                            width: double.infinity,
-                            height: 100,
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            child: Text("Error fetching data"),
-                          );
-                        }
-
-                        if (memberSnapshot.connectionState == ConnectionState.waiting) {
-                          return Container(
-                              width: double.infinity,
-                              height: 500,
-                              color: const Color.fromARGB(255, 255, 255, 255),
-                              child: Center(child: CircularProgressIndicator()));
-                        }
-
-                        if (!memberSnapshot.hasData) {
-                          return RepaintBoundary(
-                              child: GestureDetector(
-                            onScaleStart: _onScaleStart,
-                            onScaleUpdate: _onScaleUpdate,
-                            onDoubleTapDown: _onDoubleTapDown,
-                            onTapDown: _onTapDown,
-                            child: Container(
-                              width: double.infinity,
-                              height: 400,
-                              color: const Color.fromARGB(255, 255, 255, 255),
-                              child: CustomPaint(
-                                painter: MapPainter(
-                                    xposition,
-                                    yposition,
-                                    scale,
-                                    roomsOnFloor,
-                                    buildingBoundaries,
-                                    mapOrigin,
-                                    getPathAndSize,
-                                    roomClicked,
-                                    buildingName,
-                                    floorName),
-                              ),
-                            ),
-                          ));
-                        }
-
-                        /*
-                        Map<String, Map<String, dynamic>>
-                            eventDetails = {};
-                        Map<String, dynamic> eventDetail = {};
-
-                        for (var doc in eventSnapshot.data!.docs) {
-                          eventDetail = doc.data() as Map<String, dynamic>;
-                          String location = eventDetail['room'];
-                          eventDetails.addAll({location: eventDetail});
-                        }
-                        */
-
-                        List<Map<String, dynamic>> attendeesList = [];
-                        for (var doc in memberSnapshot.data!.docs) {
-                          print(doc.data() as Map<String, dynamic>);
-                          Map<String, dynamic> attendee = doc.data() as Map<String, dynamic>;
-
-                          attendeesList.add(attendee);
-                        }
-
-                        print("Member : ");
-                        print(memberSnapshot.data!.size);
-                        int numberOfAttendees = memberSnapshot.data!.size;
-                        //print(memerSnapshot.data!.docs[0].data() as Map<String,dynamic>);
-
-                        return Column(children: [
-                          GestureDetector(
-                            onScaleStart: _onScaleStart,
-                            onScaleUpdate: _onScaleUpdate,
-                            onDoubleTapDown: _onDoubleTapDown,
-                            onTapDown: _onTapDown,
-                            child: Container(
-                              width: double.infinity,
-                              height: 400,
-                              color: const Color.fromARGB(255, 255, 255, 255),
-                              child: CustomPaint(
-                                painter: MapPainter(
-                                    xposition,
-                                    yposition,
-                                    scale,
-                                    roomsOnFloor,
-                                    buildingBoundaries,
-                                    mapOrigin,
-                                    getPathAndSize,
-                                    roomClicked,
-                                    buildingName,
-                                    floorName),
-                              ),
-                            ),
-                          ),
-                          EventDetails(
-                              eventDetails, roomClicked, floorName, buildingName, attendeesList),
-                        ]);
-                      },
-                    );
-                  },
-                ),
-        ],
-      ),
+                        EventDetails(
+                            eventDetails, roomClicked, floorName, buildingName, attendeesList),
+                      ]);
+                    },
+                  );
+                },
+              ),
+      ],
     );
   }
 }
@@ -497,12 +523,8 @@ class MapPainter extends CustomPainter {
   double sumdY = 0;
   double avgdY = 0;
   double avgdX = 0;
-  double translatedTextX = 0;
-  double translatedTextY = 0;
   List<Offset> buildingBoundaries;
   Offset roomCentering;
-
-  Offset buildingBoundariesSum = Offset(0, 0);
 
   late List<Path> roomPaths = <Path>[];
   late List<String> loadedRooms = <String>[];
@@ -513,19 +535,19 @@ class MapPainter extends CustomPainter {
 
   final void Function(List<Path>, Size, List<String>) sendPath;
 
-  final pathPaintStrokeAbsent = Paint()
+  final roomBorderPaint = Paint()
     ..strokeWidth = 2.0
     ..color = const Color.fromARGB(255, 0, 154, 82)
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
 
-  final pathPaintStrokePresent = Paint()
+  final roomSelectedBorderPaint = Paint()
     ..strokeWidth = 6.0
     ..color = const Color.fromARGB(255, 0, 154, 82)
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
 
-  final pathPaintFill = Paint()
+  final roomFillPaint = Paint()
     ..strokeWidth = 2.0
     ..color = const Color.fromARGB(255, 59, 255, 164)
     ..strokeCap = StrokeCap.round
@@ -537,8 +559,6 @@ class MapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    //canvas.translate((size.width / 2 - scale * (roomCentering.dx)),
-    //    (size.height / 2 - scale * (roomCentering.dy)));
 
     final textStyle = TextStyle(
       color: const Color.fromARGB(255, 0, 154, 82),
@@ -549,21 +569,17 @@ class MapPainter extends CustomPainter {
     Path buildingPath = Path();
     bool buildingPointFirst = true;
 
+    // building boundaries transformed
     for (Offset buildingVertex in buildingBoundaries) {
       Offset transformedBuildingVertex =
           Offset(scale * (buildingVertex.dx - xposition), scale * (buildingVertex.dy - yposition));
       buildingVerticesTranformed.add(transformedBuildingVertex);
-
-      buildingBoundariesSum = Offset(buildingBoundariesSum.dx + transformedBuildingVertex.dx,
-          buildingBoundariesSum.dy + transformedBuildingVertex.dy);
     }
 
-    // Earlier this code broke the rectangle clicking
-    // If you implement something, do it completely
-    //roomCentering = Offset(buildingBoundariesSum.dx / buildingBoundaries.length, buildingBoundariesSum.dy / buildingBoundaries.length);
     canvas.translate((size.width / 2 - scale * (roomCentering.dx)),
         (size.height / 2 - scale * (roomCentering.dy)));
 
+    // building boundaries drawn
     for (int i = 0; i < buildingVerticesTranformed.length; i++) {
       Offset start = buildingVerticesTranformed[i];
       Offset end = buildingVerticesTranformed[(i + 1) % buildingVerticesTranformed.length];
@@ -578,7 +594,7 @@ class MapPainter extends CustomPainter {
     }
 
     buildingPath.close();
-    canvas.drawPath(buildingPath, pathPaintStrokeAbsent);
+    canvas.drawPath(buildingPath, roomBorderPaint);
 
     for (Room room in roomsOnFloor) {
       String currentRoomName = room.roomName;
@@ -589,6 +605,7 @@ class MapPainter extends CustomPainter {
         return Offset(scale * (point.dx - xposition), scale * (point.dy - yposition));
       }).toList();
 
+      //checks if the room vertices are within boundaries, if not, the room is skipped
       bool noneInside = true;
       for (int i = 0; i < pointsTransformed.length; i++) {
         if ((pointsTransformed[i].dx < size.width - (size.width / 2 - scale * (roomCentering.dx)) &&
@@ -601,16 +618,13 @@ class MapPainter extends CustomPainter {
         }
       }
 
-      //print("\n Event Details  \n" + eventDetails[0].toString());
-
-      canvas.drawPoints(PointMode.points, [Offset(390, 500)], pathPaintFill);
+      canvas.drawPoints(PointMode.points, [Offset(390, 500)], roomFillPaint);
 
       if (noneInside) {
-        //print(room.roomName);
-        //print("Not calculated");
         continue;
       }
 
+      //room drawn
       for (int i = 0; i < pointsTransformed.length; i++) {
         Offset start = pointsTransformed[i];
         Offset end = pointsTransformed[(i + 1) % pointsTransformed.length];
@@ -627,10 +641,10 @@ class MapPainter extends CustomPainter {
       loadedRooms.add(currentRoomName);
 
       if (currentRoomName == roomClicked) {
-        canvas.drawPath(roomPath, pathPaintStrokePresent);
-        canvas.drawPath(roomPath, pathPaintFill);
+        canvas.drawPath(roomPath, roomSelectedBorderPaint);
+        canvas.drawPath(roomPath, roomFillPaint);
       } else {
-        canvas.drawPath(roomPath, pathPaintStrokeAbsent);
+        canvas.drawPath(roomPath, roomBorderPaint);
       }
 
       finalTextDisplayed = currentRoomName;
@@ -703,43 +717,26 @@ class EventDetails extends StatelessWidget {
   void displayEvent() {
     //if there are no events for the room clicked, display "No events"
     if (eventDetails[roomClicked] == null) {
-      eventDetailTiles.add(const ListTile(
-        dense: true,
-        title: Text("No events"),
-        minTileHeight: 0,
-      ));
+      eventDetailTiles.add(DetailsTile("No Events"));
     } else {
-      eventDetailTiles.add(ListTile(
-        dense: true,
-        title: Text(
-          "Event Name : ${eventDetails[roomClicked]!['name']}",
-          style: TextStyle(fontSize: 12),
-        ),
-        minTileHeight: 0,
+      eventDetailTiles.add(DetailsTile(
+        "Event Name : ${eventDetails[roomClicked]!['name']}",
       ));
     }
   }
 
   void displayAttendeeCount() {
-    eventDetailTiles.add(ListTile(
-      dense: true,
-      title: Text("Number of Attendees : $numberOfAttendees"),
-      minTileHeight: 0,
-    ));
+    eventDetailTiles.add(DetailsTile("Number of Attendees : $numberOfAttendees"));
   }
 
   void displayAttendeeNames(List<Map<String, dynamic>> attendeesInRoom) {
     for (Map<String, dynamic> attendee in attendeesInRoom) {
-      eventDetailTiles.add(ListTile(
-        dense: true,
-        title: Text(attendee['name']),
-        minTileHeight: 0,
-      ));
+      eventDetailTiles.add(DetailsTile(attendee['name']));
     }
   }
 
   EventDetails(
-      this.eventDetails, this.roomClicked, this.floorName, this.buildingName, this.attendeesList) {
+      this.eventDetails, this.roomClicked, this.floorName, this.buildingName, this.attendeesList, {super.key}) {
     displayEvent();
 
     String location = "$buildingName/$floorName/$roomClicked";

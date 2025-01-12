@@ -14,6 +14,7 @@ import 'custom_widgets/cf_toast.dart';
 
 import 'firebase_connections/firestore_error_messages.dart';
 
+
 class Member {
   late String name;
   late String rfidLocation;
@@ -178,6 +179,11 @@ class MemberLocationMapState extends State<MemberLocationMap> {
           .limit(1)
           .get();
 
+      if (memberBuildingSnapshot.docs.isEmpty) {
+        putToast("Member building not found in institution");
+        logger.f("Member building not found in the institution : $appUserInstitutionID");
+      }
+
       QueryDocumentSnapshot memberBuilding = memberBuildingSnapshot.docs.first;
       buildingDocName = memberBuilding.id;
       building = memberBuilding.data() as Map<String, dynamic>;
@@ -206,6 +212,11 @@ class MemberLocationMapState extends State<MemberLocationMap> {
           .where('floor_name', isEqualTo: memberSearched.floor)
           .limit(1)
           .get();
+
+      if (memberFloorSnapshot.docs.isEmpty) {
+        putToast("Member floor not found in the institution");
+        logger.f("Member floor not found in the institution : $appUserInstitutionID");
+      }
 
       QueryDocumentSnapshot memberFloor = memberFloorSnapshot.docs.first;
 
