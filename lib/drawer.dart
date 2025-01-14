@@ -11,6 +11,8 @@ import 'firebase_connections/singleton_auth.dart';
 
 import 'login_page.dart';
 
+import 'session_data/session_details.dart';
+
 class CampusFindDrawer extends StatelessWidget {
   final Logger logger = Logger(printer: CustomPrinter("CampusFindDrawer"));
 
@@ -19,19 +21,26 @@ class CampusFindDrawer extends StatelessWidget {
   CampusFindDrawer({super.key});
 
   Future<void> signOut() async {
+    SessionDetails.clearSessionDetails();
     await _auth.signOut();
     logger.i("User Logged Out");
   }
 
   Widget buildDrawer(BuildContext context) {
-    return const SizedBox(
-        height: 50,
+    return SizedBox(
+        height: 70,
         child: DrawerHeader(
             margin: EdgeInsets.all(0),
-            padding: EdgeInsets.all(0),
-            child: Column(
-              children: <Widget>[Text("Username")],
-            )));
+            padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
+            child: Column(children: <Widget>[
+              Row(children: <Widget>[
+                SizedBox(width: 5),
+                const Icon(Icons.person),
+                SizedBox(width: 13),
+                Text(SessionDetails.name)
+              ]),
+              Row(children: [SizedBox(width: 5,),Text("Status")]),
+            ])));
   }
 
   Widget buildDrawerFooter(BuildContext context) {
@@ -54,14 +63,14 @@ class CampusFindDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-        backgroundColor: const Color(0xFFD9D9D9),
+        backgroundColor: Colors.white,
         child: Column(
           children: <Widget>[
             Expanded(
                 child: ListView(children: <Widget>[
               buildDrawer(context),
               ListTile(
-                leading: const Icon(Icons.person),
+                leading: const Icon(Icons.search),
                 minTileHeight: 48,
                 title: const Text("Search members"),
                 onTap: () {

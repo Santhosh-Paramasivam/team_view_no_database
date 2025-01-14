@@ -21,7 +21,6 @@ import 'global_config/global_config.dart';
 import 'firebase_connections/auth_error_messages.dart';
 import 'firebase_connections/firestore_error_messages.dart';
 
-
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
 
