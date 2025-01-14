@@ -10,8 +10,8 @@ After having to spend hours looking for professors and heads of departments on b
 
 ### CampusFind offers a seamless way to:
 
-✅ Instantly locate colleagues with real-time, interactive floor maps.
-✅ Set and update your own location with ease.
-✅ Look at the events and attendees in each room
-✅ Use RFID stations for quick, automated check-ins and check-outs.
-✅ Display your availability status for efficient and respectful collaboration.
+✅ Instantly locate colleagues with real-time, interactive floor maps.  
+✅ Set and update your own location with ease.  
+✅ Look at the events and attendees in each room.  
+✅ Use RFID stations for quick, automated check-ins and check-outs.  
+✅ Display your availability status for efficient and respectful collaboration.  
