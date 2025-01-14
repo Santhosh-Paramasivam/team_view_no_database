@@ -8,7 +8,7 @@ Have you ever spent valuable time searching for a teammate across a sprawling in
 
 After having to spend hours looking for professors and heads of departments on busy days for signatures and permissions, I created an app where you can look up people in an institution from a couple taps on your mobile device!
 
-## CampusFind offers a seamless way to:
+# CampusFind offers a seamless way to:
 
 ✅ Instantly locate colleagues with real-time, interactive floor maps.  
 ✅ Set and update your own location with ease.  
