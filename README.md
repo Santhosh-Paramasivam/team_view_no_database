@@ -1,16 +1,17 @@
-# team_view_no_database_windows
+# CampusFind - A solution to quickly locate fellow employees and teammates
 
-A new Flutter project.
+# 🔍 The Problem
 
-## Getting Started
+Have you ever spent valuable time searching for a teammate across a sprawling institution? Phone calls and messages often interrupt workflows, while coordinating large teams quickly can feel impossible.
 
-This project is a starting point for a Flutter application.
+# 💡 The Solution
 
-A few resources to get you started if this is your first Flutter project:
+After having to spend hours looking for professors and heads of departments on busy days for signatures and permissions, I created an app where you can look up people in an institution from a couple taps on your mobile device!
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# CampusFind offers a seamless way to:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+✅ Instantly locate colleagues with real-time, interactive floor maps.
+✅ Set and update your own location with ease.
+✅ Look at the events and attendees in each room
+✅ Use RFID stations for quick, automated check-ins and check-outs.
+✅ Display your availability status for efficient and respectful collaboration.
