@@ -618,7 +618,7 @@ class MapPainter extends CustomPainter {
         }
       }
 
-      canvas.drawPoints(PointMode.points, [Offset(390, 500)], roomFillPaint);
+      canvas.drawPoints(PointMode.points, [const Offset(390, 500)], roomFillPaint);
 
       if (noneInside) {
         continue;

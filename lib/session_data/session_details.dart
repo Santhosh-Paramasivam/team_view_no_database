@@ -4,6 +4,7 @@ class SessionDetails {
   static String institutionID = "";
   static String name = "";
   static String rfidLocation = "";
+  static String status = "";
 
   static void clearSessionDetails()
   {
@@ -12,5 +13,6 @@ class SessionDetails {
     institutionID = "";
     name = "";
     rfidLocation = "";
+    status = "";
   }
 }

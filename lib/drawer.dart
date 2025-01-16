@@ -30,16 +30,16 @@ class CampusFindDrawer extends StatelessWidget {
     return SizedBox(
         height: 70,
         child: DrawerHeader(
-            margin: EdgeInsets.all(0),
-            padding: EdgeInsets.fromLTRB(15, 0, 0, 0),
+            margin: const EdgeInsets.all(0),
+            padding: const EdgeInsets.fromLTRB(15, 0, 0, 0),
             child: Column(children: <Widget>[
               Row(children: <Widget>[
-                SizedBox(width: 5),
+                const SizedBox(width: 5),
                 const Icon(Icons.person),
-                SizedBox(width: 13),
+                const SizedBox(width: 13),
                 Text(SessionDetails.name)
               ]),
-              Row(children: [SizedBox(width: 5,),Text("Status")]),
+              const Row(children: [SizedBox(width: 5,),Text("Status")]),
             ])));
   }
 

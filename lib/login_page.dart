@@ -136,6 +136,8 @@ class LoginPage extends StatelessWidget {
       SessionDetails.institutionID = member['institution_id'];
       SessionDetails.name = member['name'];
       SessionDetails.rfidLocation = member['rfid_location'];
+      SessionDetails.status = member['status'];
+
 
       logger.i("Before loading in floor names");
       bool buildingsLoading = await loadBuildingFloorNames(SessionDetails.institutionID);
