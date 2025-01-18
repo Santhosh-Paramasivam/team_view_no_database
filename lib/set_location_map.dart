@@ -551,8 +551,9 @@ class MapPainter extends CustomPainter {
     8: const Color.fromARGB(255, 255, 245, 153),
     9: const Color.fromARGB(255, 255, 218, 185)
   };
-final buildingBorderPaint = Paint()
-    ..strokeWidth = 2.0
+
+  final buildingBorderPaint = Paint()
+    ..strokeWidth = 1.5
     ..color = const Color.fromARGB(255, 0, 154, 82)
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
@@ -663,8 +664,6 @@ final buildingBorderPaint = Paint()
         }
       }
 
-      canvas.drawPoints(PointMode.points, [const Offset(390, 500)], roomFillPaint);
-
       if (noneInside) {
         continue;
       }
@@ -697,9 +696,11 @@ final buildingBorderPaint = Paint()
 
       if (currentRoomName == roomClicked) {
         canvas.drawPath(roomPath, roomSelectedBorderPaint);
-        canvas.drawPath(roomPath, roomFillPaint);
       } else {
         canvas.drawPath(roomPath, roomBorderPaint);
+      }
+
+      if (eventDetails.isNotEmpty || eventDetails[currentRoomName] != null) {
         canvas.drawPath(roomPath, roomFillPaint);
       }
 
@@ -748,10 +749,14 @@ final buildingBorderPaint = Paint()
         roomNamePainter.paint(
             canvas, Offset(avgdX - roomNamePainter.width / 2, avgdY - roomNamePainter.height / 2));
       } else {
-        roomNamePainter.paint(canvas,
-            Offset(avgdX - roomNamePainter.width / 2, avgdY - roomNamePainter.height / 2 - scale * 13));
+        roomNamePainter.paint(
+            canvas,
+            Offset(avgdX - roomNamePainter.width / 2,
+                avgdY - roomNamePainter.height / 2 - scale * 13));
         eventNamePainter.paint(
-            canvas, Offset(avgdX - eventNamePainter.width / 2, avgdY - eventNamePainter.height / 2 + scale * 13));
+            canvas,
+            Offset(avgdX - eventNamePainter.width / 2,
+                avgdY - eventNamePainter.height / 2 + scale * 13));
       }
     }
 
