@@ -12,7 +12,7 @@ import 'session_data/session_details.dart';
 import 'session_data/building_details.dart';
 
 import 'custom_widgets/cf_button.dart';
-import 'custom_widgets/cf_input.dart';
+import 'custom_widgets/cf_login_input.dart';
 
 import 'package:logger/logger.dart';
 import 'custom_logger.dart';
@@ -132,6 +132,7 @@ class LoginPage extends StatelessWidget {
       QueryDocumentSnapshot currentUserData = currentUser.docs[0];
       Map<String, dynamic> member = currentUserData.data() as Map<String, dynamic>;
       SessionDetails.email = member['email_id'];
+      SessionDetails.userDocID = currentUser.docs[0].id;
       SessionDetails.id = _auth.currentUser!.uid;
       SessionDetails.institutionID = member['institution_id'];
       SessionDetails.name = member['name'];
@@ -176,13 +177,17 @@ class LoginPage extends StatelessWidget {
               width: 200,
             ),
             const SizedBox(height: 60),
-            CampusFindInput(
+            CampusFindLoginInput(
+              fontSize: 16,
               width: 300,
+              height: 55,
               controller: _emailInputController,
               labelText: "Email Address",
             ),
-            CampusFindInput(
+            CampusFindLoginInput(
+              fontSize: 16,
               width: 300,
+              height: 55,
               controller: _passwordInputController,
               obscureText: true,
               labelText: "Password",

@@ -395,7 +395,7 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                               getPathAndSize,
                               roomClicked,
                               buildingName,
-                              floorName),
+                              floorName, {}),
                         ),
                       ),
                     ));
@@ -458,7 +458,8 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                                   getPathAndSize,
                                   roomClicked,
                                   buildingName,
-                                  floorName),
+                                  floorName,
+                                  eventDetails),
                             ),
                           ),
                         ));
@@ -497,7 +498,8 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
                                   getPathAndSize,
                                   roomClicked,
                                   buildingName,
-                                  floorName),
+                                  floorName,
+                                  eventDetails),
                             ),
                           ),
                         ),
@@ -535,26 +537,56 @@ class MapPainter extends CustomPainter {
 
   final void Function(List<Path>, Size, List<String>) sendPath;
 
-  final roomBorderPaint = Paint()
+  Map<String, Map<String, dynamic>> eventDetails = {};
+
+  final Map<int, Color> eventColours = {
+    0: const Color.fromARGB(255, 255, 223, 186),
+    1: const Color.fromARGB(255, 59, 255, 164),
+    2: const Color.fromARGB(255, 53, 231, 234),
+    3: const Color.fromARGB(255, 248, 206, 129),
+    4: const Color.fromARGB(255, 211, 210, 210),
+    5: const Color.fromARGB(255, 255, 223, 233),
+    6: const Color.fromARGB(255, 228, 255, 228),
+    7: const Color.fromARGB(255, 223, 239, 253),
+    8: const Color.fromARGB(255, 255, 245, 153),
+    9: const Color.fromARGB(255, 255, 218, 185)
+  };
+final buildingBorderPaint = Paint()
     ..strokeWidth = 2.0
+    ..color = const Color.fromARGB(255, 0, 154, 82)
+    ..strokeCap = StrokeCap.round
+    ..style = PaintingStyle.stroke;
+
+  final roomBorderPaint = Paint()
+    ..strokeWidth = 3.0
     ..color = const Color.fromARGB(255, 0, 154, 82)
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
 
   final roomSelectedBorderPaint = Paint()
-    ..strokeWidth = 6.0
+    ..strokeWidth = 4.5
     ..color = const Color.fromARGB(255, 0, 154, 82)
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
 
   final roomFillPaint = Paint()
-    ..strokeWidth = 2.0
+    ..strokeWidth = 3.0
     ..color = const Color.fromARGB(255, 59, 255, 164)
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.fill;
 
-  MapPainter(this.xposition, this.yposition, this.scale, this.roomsOnFloor, this.buildingBoundaries,
-      this.roomCentering, this.sendPath, this.roomClicked, this.buildingName, this.floorName);
+  MapPainter(
+      this.xposition,
+      this.yposition,
+      this.scale,
+      this.roomsOnFloor,
+      this.buildingBoundaries,
+      this.roomCentering,
+      this.sendPath,
+      this.roomClicked,
+      this.buildingName,
+      this.floorName,
+      this.eventDetails);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -565,6 +597,19 @@ class MapPainter extends CustomPainter {
       fontSize: scale * 20,
     );
 
+    // chosen colours
+    // black = Color.fromARGB(255, 0, 0, 0);
+    // Color.fromARGB(255, 38, 38, 38);
+    // Color.fromARGB(255, 53, 231, 234);
+    // Color.fromARGB(255, 252, 177, 38);
+    // Color.fromARGB(255, 211, 210, 210);
+    // lavender blush Color.fromARGB(255, 255, 223, 233);
+    // honey dew Color.fromARGB(255, 228, 255, 228);
+    // alice blue Color.fromARGB(255, 223, 239, 253);
+    // lemon chiffon Color.fromARGB(255, 255, 245, 153);
+    // peach puff Color.fromARGB(255, 255, 218, 185);
+
+    roomFillPaint.color = eventColours[9]!;
     List<Offset> buildingVerticesTranformed = <Offset>[];
     Path buildingPath = Path();
     bool buildingPointFirst = true;
@@ -594,7 +639,7 @@ class MapPainter extends CustomPainter {
     }
 
     buildingPath.close();
-    canvas.drawPath(buildingPath, roomBorderPaint);
+    canvas.drawPath(buildingPath, buildingBorderPaint);
 
     for (Room room in roomsOnFloor) {
       String currentRoomName = room.roomName;
@@ -640,27 +685,52 @@ class MapPainter extends CustomPainter {
       roomPaths.add(roomPath);
       loadedRooms.add(currentRoomName);
 
+      String eventName;
+      if (eventDetails.isEmpty || eventDetails[currentRoomName] == null) {
+        roomFillPaint.color = Colors.white;
+        eventName = "";
+      } else {
+        eventName = eventDetails[currentRoomName]!['name'];
+        int colourIndex = eventName.hashCode % 10;
+        roomFillPaint.color = eventColours[colourIndex]!;
+      }
+
       if (currentRoomName == roomClicked) {
         canvas.drawPath(roomPath, roomSelectedBorderPaint);
         canvas.drawPath(roomPath, roomFillPaint);
       } else {
         canvas.drawPath(roomPath, roomBorderPaint);
+        canvas.drawPath(roomPath, roomFillPaint);
       }
 
-      finalTextDisplayed = currentRoomName;
-
-      TextSpan textSpan = TextSpan(
-        text: finalTextDisplayed,
+      TextSpan roomNameSpan = TextSpan(
+        text: currentRoomName,
         style: textStyle,
       );
 
-      TextPainter textPainter = TextPainter(
+      TextPainter roomNamePainter = TextPainter(
         textAlign: TextAlign.center,
-        text: textSpan,
+        text: roomNameSpan,
         textDirection: TextDirection.ltr,
       );
 
-      textPainter.layout(
+      roomNamePainter.layout(
+        minWidth: 0,
+        maxWidth: size.width,
+      );
+
+      TextSpan eventNameSpan = TextSpan(
+        text: eventName,
+        style: textStyle,
+      );
+
+      TextPainter eventNamePainter = TextPainter(
+        textAlign: TextAlign.center,
+        text: eventNameSpan,
+        textDirection: TextDirection.ltr,
+      );
+
+      eventNamePainter.layout(
         minWidth: 0,
         maxWidth: size.width,
       );
@@ -674,8 +744,15 @@ class MapPainter extends CustomPainter {
       avgdY = sumdY / pointsTransformed.length;
       avgdX = sumdX / pointsTransformed.length;
 
-      textPainter.paint(
-          canvas, Offset(avgdX - textPainter.width / 2, avgdY - textPainter.height / 2));
+      if (eventDetails.isEmpty || eventDetails[currentRoomName] == null) {
+        roomNamePainter.paint(
+            canvas, Offset(avgdX - roomNamePainter.width / 2, avgdY - roomNamePainter.height / 2));
+      } else {
+        roomNamePainter.paint(canvas,
+            Offset(avgdX - roomNamePainter.width / 2, avgdY - roomNamePainter.height / 2 - scale * 13));
+        eventNamePainter.paint(
+            canvas, Offset(avgdX - eventNamePainter.width / 2, avgdY - eventNamePainter.height / 2 + scale * 13));
+      }
     }
 
     sendPath(roomPaths, size, loadedRooms);
@@ -736,7 +813,8 @@ class EventDetails extends StatelessWidget {
   }
 
   EventDetails(
-      this.eventDetails, this.roomClicked, this.floorName, this.buildingName, this.attendeesList, {super.key}) {
+      this.eventDetails, this.roomClicked, this.floorName, this.buildingName, this.attendeesList,
+      {super.key}) {
     displayEvent();
 
     String location = "$buildingName/$floorName/$roomClicked";
