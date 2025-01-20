@@ -439,30 +439,35 @@ class SetLocationMapWidgetState extends State<SetLocationMap> {
 
                         return RepaintBoundary(
                             child: GestureDetector(
-                          onScaleStart: _onScaleStart,
-                          onScaleUpdate: _onScaleUpdate,
-                          onDoubleTapDown: _onDoubleTapDown,
-                          onTapDown: _onTapDown,
-                          child: Container(
-                            width: double.infinity,
-                            height: 400,
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            child: CustomPaint(
-                              painter: MapPainter(
-                                  xposition,
-                                  yposition,
-                                  scale,
-                                  roomsOnFloor,
-                                  buildingBoundaries,
-                                  mapOrigin,
-                                  getPathAndSize,
-                                  roomClicked,
-                                  buildingName,
-                                  floorName,
-                                  eventDetails),
-                            ),
-                          ),
-                        ));
+                                onScaleStart: _onScaleStart,
+                                onScaleUpdate: _onScaleUpdate,
+                                onDoubleTapDown: _onDoubleTapDown,
+                                onTapDown: _onTapDown,
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      width: double.infinity,
+                                      height: 400,
+                                      color: const Color.fromARGB(255, 255, 255, 255),
+                                      child: CustomPaint(
+                                        painter: MapPainter(
+                                            xposition,
+                                            yposition,
+                                            scale,
+                                            roomsOnFloor,
+                                            buildingBoundaries,
+                                            mapOrigin,
+                                            getPathAndSize,
+                                            roomClicked,
+                                            buildingName,
+                                            floorName,
+                                            eventDetails),
+                                      ),
+                                    ),
+                                    EventDetails(
+                                        eventDetails, roomClicked, floorName, buildingName, []),
+                                  ],
+                                )));
                       }
 
                       // All attendees in the floor are added to a list
@@ -700,9 +705,7 @@ class MapPainter extends CustomPainter {
         canvas.drawPath(roomPath, roomBorderPaint);
       }
 
-      if (eventDetails.isNotEmpty || eventDetails[currentRoomName] != null) {
-        canvas.drawPath(roomPath, roomFillPaint);
-      }
+      canvas.drawPath(roomPath, roomFillPaint);
 
       TextSpan roomNameSpan = TextSpan(
         text: currentRoomName,
