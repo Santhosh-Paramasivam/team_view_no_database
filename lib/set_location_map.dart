@@ -570,7 +570,7 @@ class MapPainter extends CustomPainter {
     ..style = PaintingStyle.stroke;
 
   final roomSelectedBorderPaint = Paint()
-    ..strokeWidth = 4.5
+    ..strokeWidth = 6
     ..color = const Color.fromARGB(255, 0, 154, 82)
     ..strokeCap = StrokeCap.round
     ..style = PaintingStyle.stroke;
@@ -772,6 +772,7 @@ class MapPainter extends CustomPainter {
         oldDelegate.yposition != yposition ||
         oldDelegate.scale != scale ||
         oldDelegate.roomsOnFloor != roomsOnFloor ||
+        oldDelegate.eventDetails != eventDetails ||  
         oldDelegate.roomClicked != roomClicked;
   }
 }

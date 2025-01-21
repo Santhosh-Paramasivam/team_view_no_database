@@ -287,7 +287,11 @@ class CampusFindTime {
     int s = timeDifference.inSeconds - (m * 60 + h * 3600);
 
     if (h == 0 && m == 0) {
-      return "$s sec ago";
+      if (s < 0) {
+        return "${s + 1} sec ago";
+      } else {
+        return "$s sec ago";
+      }
     }
 
     if (h == 0) {

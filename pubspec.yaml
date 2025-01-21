@@ -60,9 +60,15 @@ dev_dependencies:
   
 
 flutter_launcher_icons:
-  android: true
-  image_path: "assets/icon/icon.png"
-  min_sdk_android: 23 # android min sdk min:16, default 21
+  #  image_path: "assets/images/icon-128x128.png"
+  image_path_android: "assets/icon/icon.png"
+  android: true # can specify file name here e.g. "ic_launcher"
+  # adaptive_icon_background: "assets/images/christmas-background.png" # only available for Android 8.0 devices and above
+  # adaptive_icon_foreground: "assets/images/icon-foreground-432x432.png" # only available for Android 8.0 devices and above
+  adaptive_icon_foreground_inset: 16 # only available for Android 8.0 devices and above
+  # adaptive_icon_monochrome: "assets/images/icon-monochrome-432x432.png" # only available for Android 13 devices and above
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  # background_color_ios: "#ffffff"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -70,6 +76,7 @@ flutter_launcher_icons:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
+   - assets/icon/icon.png
    - assets/buildings.json
    - assets/members.json
    - assets/status.json
