@@ -1,4 +1,4 @@
-# CampusFind - Quickly locate fellow employees and teammates
+# CampusFind - Quickly Locate Fellow Employees and Teammates
 
 ## The Problem
 
@@ -33,4 +33,6 @@ Submit an issue here on Github
 
 ## Contributing
 
-I’d love your help in improving CampusFind! To contribute, please fork the repo and submit pull requests to the **main branch**.
+I would very much appreciate your help! Contribute by forking the repo and opening pull requests.
+
+All pull requests should be submitted to the main branch.
