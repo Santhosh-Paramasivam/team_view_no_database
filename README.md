@@ -27,7 +27,7 @@ As such, a download link is unavailable until further updates.
 
 ## Contact
 
-![GitHub Logo](https://github.com/user-attachments/assets/f936a746-48f6-4071-8c0c-32d1aba2195c)
+[![Image](https://github.com/user-attachments/assets/f936a746-48f6-4071-8c0c-32d1aba2195c)][1]
 
 For support, please submit an issue on [GitHub](https://github.com/Santhosh-Paramasivam).
 
