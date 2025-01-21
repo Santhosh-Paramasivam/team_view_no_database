@@ -27,16 +27,10 @@ As such, a download link is unavailable until further updates.
 
 ## Contact
 
-[![Image](https://github.com/user-attachments/assets/f936a746-48f6-4071-8c0c-32d1aba2195c)][1]
-
-For support, please submit an issue on [GitHub](https://github.com/Santhosh-Paramasivam).
+[LinkedIn](www.linkedin.com/in/santhosh-paramasivam-2a430a267)
 
 Submit an issue here on Github
 
 ## Contributing
 
-I would very much appreciate your help! Contribute by forking the repo and opening pull requests.
-
-All pull requests should be submitted to the main branch.
-
-[1]: https://github.com/Santhosh-Paramasivam
+I’d love your help in improving CampusFind! To contribute, please fork the repo and submit pull requests to the **main branch**.
