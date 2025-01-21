@@ -27,7 +27,7 @@ As such, a download link is currently unavailable
 
 ## Contact
 
-![Image](https://github.com/user-attachments/assets/f936a746-48f6-4071-8c0c-32d1aba2195c)
+[![Image](https://github.com/user-attachments/assets/f936a746-48f6-4071-8c0c-32d1aba2195c)][1]
 Submit an issue here on Github
 
 ## Contributing
@@ -35,3 +35,5 @@ Submit an issue here on Github
 I would very much appreciate your help! Contribute by forking the repo and opening pull requests.
 
 All pull requests should be submitted to the main branch.
+
+[1]: https://github.com/Santhosh-Paramasivam
